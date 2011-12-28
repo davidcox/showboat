@@ -1,0 +1,11 @@
+{
+    "assets_path": "/Users/davidcox/Documents/talks/assets",
+    
+    "thumbnail_cmd": "webkit2png --width=${width} --height=${height} --dir=${dst_path} -T -o slide_${slide_number} ${slide_url}",
+    "html_compile_cmd": "jade ${dst_path}",
+    "script_compile_cmd": "coffee -c ${script_path}",
+    "styles_compile_cmd": "",
+    "sync_cmd": "rsync -a ${src_path} ${dst_path}",
+    "view_cmd": "open ${url}",
+    "present_cmd": "open -a Plainview.app ${url}"
+}

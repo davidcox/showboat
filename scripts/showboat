@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+
+import argparse
+import os
+import shutil
+import shlex
+import subprocess
+import re
+
+from showboat import compile
+
+browser_command_template = 'open %s'
+presentation_command_template = 'open -a /Applications/Plainview.app "%s"'
+
+parser = argparse.ArgumentParser(description='Compile a showboat presentation')
+parser.add_argument('command', type=str,
+                    help='the command for showboat to perform')
+parser.add_argument('src_path', default='.',
+                    help='the src path')
+parser.add_argument('--copy_assets', action='store_true', default=False)
+parser.add_argument('--out_path', '-o', default='.')
+
+args = parser.parse_args()
+
+
+
+index_path = os.path.join(args.out_path, 'output', 'index.html')
+
+if args.command == 'compile':
+    compile(args.src_path, args.out_path, copy_assets=args.copy_assets)
+elif args.command == 'view':
+    compile(args.src_path, args.out_path, copy_assets=args.copy_assets)
+    os.system(browser_command_template % index_path)
+elif args.command == 'present':
+    compile(args.src_path, args.out_path, copy_assets=args.copy_assets)
+    os.system(presentation_command_template % os.path.abspath(index_path))
+else:
+    raise Exception('Unknown command: %s' % args.command)
