@@ -7,7 +7,7 @@ import shlex
 import subprocess
 import re
 
-from showboat import compile, deposit_skeleton
+from showboat import compile, deposit_skeleton, view_url, present_url
 
 browser_command_template = 'open %s'
 presentation_command_template = 'open -a /Applications/Plainview.app "%s"'
@@ -24,7 +24,9 @@ args = parser.parse_args()
 
 
 
-index_path = os.path.join(args.out_path, 'output', 'index.html')
+index_path = os.path.abspath(os.path.expanduser(os.path.join(args.out_path, 
+                                                'output', 
+                                                'index.html')))
 
 if args.command == 'start':
     deposit_skeleton(args.src_path)
@@ -32,9 +34,10 @@ elif args.command == 'compile':
     compile(args.src_path, args.out_path, copy_assets=args.copy_assets)
 elif args.command == 'view':
     compile(args.src_path, args.out_path, copy_assets=args.copy_assets)
-    os.system(browser_command_template % index_path)
+    view_url(index_path)
 elif args.command == 'present':
     compile(args.src_path, args.out_path, copy_assets=args.copy_assets)
-    os.system(presentation_command_template % os.path.abspath(index_path))
+    print index_path
+    present_url(index_path)
 else:
     raise Exception('Unknown command: %s' % args.command)

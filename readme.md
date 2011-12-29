@@ -45,12 +45,12 @@ also are possible.
 
 I'm *really* excited about using this a platform to bring in fancy data visualization into my talks, via the amazing d3.js project.  
 
-There's a lot of interesting audience-interaction potential as well; this seems to be what @schacon is most interested in with *Showoff*, though, being a scientist and not a "web person", it is much less common to be giving a talk to audience where everyone has their laptops out.  I may have to start teaching soon, however, so I am interested in the possibilities for student interaction with a live presentation.  Making a talk be a web-thingy really opens up an almost limitless canvas of possibility.
+There's a lot of interesting audience-interaction potential as well; this seems to be what @schacon is most interested in with *Showoff*, though, being a scientist and not a web person, it is much less common to be giving a talk to audience where everyone has their laptops out.  I may have to start teaching soon, however, so I am interested in the possibilities for student interaction with a live presentation.  Making a talk be a web-thingy really opens up an almost limitless canvas of possibility.
 
 ## Disclaimer
 
 I'm still putting this together, so don't expect any of this to be ready yet.  I'm writing this readme on the off-hand chance that someone stumbles across this on the web.
 
-Also, please note, I'm not a "web person" (at least, not for many years), so this is my first foray back into some of these web technologies.  I'm muddling along a bit in Coffeescript and CSS, so if you're interested in this project and have any suggestions or want to help, please drop me a line at davidcox@me.com.
+Also, please note, I'm not someone who lives and breaths web technologies (at least, not for many years), so this is my first foray back into some of these web technologies.  I'm muddling along a bit in Coffeescript and CSS, so if you're interested in this project and have any suggestions or want to help, please drop me a line at davidcox@me.com.
 
 

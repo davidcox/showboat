@@ -16,7 +16,10 @@ def default_config():
 
 def load_config():
     # check for .showboat.json in ~/
-    
+    user_config_filename = os.path.expanduser('~/.showboat')
+    if os.path.exists(user_config_filename):
+        with open(user_config, 'r') as f:
+            return json.load(f)
     # shortcut
     return default_config()
 
@@ -84,4 +87,16 @@ def build_slide_thumbnails(dst_path, n_slides):
     http_server.kill()
 
 
+def view_url(url):
+    # check if it is a file
+    if os.path.exists(url):
+        url = "file://" + url
+    cmd = Template(config['view_url_cmd']).render(url=url)
+    syscall(cmd)
 
+def present_url(url):
+    # check if it is a file
+    if os.path.exists(url):
+        url = "file://" + url
+    cmd = Template(config['present_url_cmd']).render(url=url)
+    syscall(cmd)
