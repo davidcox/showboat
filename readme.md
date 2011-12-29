@@ -41,6 +41,11 @@ Also, simple slidy-style bullety things like:
 
 also are possible.
 
+## Usage
+
+  showboat start my_slideshow  # start a new presentation in my_slideshow
+  showboat {compile | view | present} my_slideshow
+
 ## Where is it going?
 
 I'm *really* excited about using this a platform to bring in fancy data visualization into my talks, via the amazing d3.js project.  

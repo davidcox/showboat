@@ -69,8 +69,11 @@ def build_slide_thumbnails(dst_path, n_slides):
     import shlex
 
     # more syscall hackery
-    http_cmd = 'mongoose -r %s' % dst_path
-    http_server = subprocess.Popen(shlex.split(http_cmd))
+    # http_cmd = 'mongoose -r %s' % dst_path
+    # http_server = subprocess.Popen(shlex.split(http_cmd))
+    from showboat.server import Server
+    server = Server(dst_path)
+    server.start()
 
     tn_path = os.path.join(dst_path, 'thumbnails')
     os.mkdir(tn_path)
@@ -84,8 +87,7 @@ def build_slide_thumbnails(dst_path, n_slides):
                                                        slide_url = slide_url)
         syscall(cmd)
 
-    http_server.kill()
-
+    server.stop()
 
 def view_url(url):
     # check if it is a file
@@ -100,3 +102,5 @@ def present_url(url):
         url = "file://" + url
     cmd = Template(config['present_url_cmd']).render(url=url)
     syscall(cmd)
+
+

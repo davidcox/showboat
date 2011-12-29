@@ -1,4 +1,5 @@
 from util import *
+from server import *
 from pkg_resources import resource_filename
 import shutil
 
@@ -16,9 +17,7 @@ def deposit_skeleton(dst_path):
 
 def compile(src_path, out_path, copy_assets=False, overwrite_output=True,
             build_thumbnails=True):
-    
-    out_path = os.path.join(out_path, 'output')
-    
+        
     if overwrite_output:
         # remove the existing output dir
         try:
@@ -68,4 +67,9 @@ def compile(src_path, out_path, copy_assets=False, overwrite_output=True,
         n_slides = count_n_slides(out_path)
         build_slide_thumbnails(out_path, n_slides)
 
-    
+
+def serve(path, ip, port):
+    server.start(path, ip='127.0.0.1', port=8080)
+
+def stop_serving():
+    server.stop()  
