@@ -62,22 +62,4 @@ def compile(src_path, out_path, copy_assets=False, overwrite_output=True,
         n_slides = count_n_slides(out_path)
         build_slide_thumbnails(out_path, n_slides)
     
-def build_slide_thumbnails(dst_path, n_slides):
-    
-    import subprocess
-    import shlex
-    
-    # more syscall hackery
-    http_cmd = 'mongoose -r %s' % dst_path
-    http_server = subprocess.Popen(shlex.split(http_cmd))
-    
-    tn_path = os.path.join(dst_path, 'thumbnails')
-    os.mkdir(tn_path)
-    
-    for n in range(0, n_slides):
-        slide_url = " http://127.0.0.1:8080/index.html#%d" % (n+1)
-        cmd = '/usr/bin/env webkit2png --width=%d --height=%d --dir=%s -T -o slide_%d %s' % \
-                (200, 150, tn_path, n+1, slide_url)
-        syscall(cmd)
-    
-    http_server.kill()
+
