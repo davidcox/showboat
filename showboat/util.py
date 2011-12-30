@@ -6,6 +6,8 @@ import shlex
 import shutil
 import subprocess
 from mako.template import Template
+import urllib
+import time
 
 top_level_module_name = __name__.split('.')[0]
 
@@ -18,7 +20,7 @@ def load_config():
     # check for .showboat.json in ~/
     user_config_filename = os.path.expanduser('~/.showboat')
     if os.path.exists(user_config_filename):
-        with open(user_config, 'r') as f:
+        with open(user_config_filename, 'r') as f:
             return json.load(f)
     # shortcut
     return default_config()
@@ -62,24 +64,39 @@ def count_n_slides(out_path):
         n = len(re.findall(r'class\s*\=\s*\"slide\"', html))
         return n
 
+def serve_http(root_path, host='localhost', port=8080, timeout=2.0):
+    cmd = Template(config['http_server_cmd']).render(root_path=root_path,
+                                                     host=host,
+                                                     port=port)
+    proc = subprocess.Popen(shlex.split(str(cmd)))
+    
+    # check to see if the server is up yet
+    connected = False
+    tic = time.time()
+
+
+    while not connected and ((time.time() - tic) < timeout):
+        try:
+            urllib.urlopen("http://localhost:8080/index.html")
+            connected = True
+        except IOError:
+            pass
+
+    if not connected:
+        raise IOError('Unable to connect to internally-launched HTTP server')
+        
+    return proc
 
 def build_slide_thumbnails(dst_path, n_slides):
 
-    import subprocess
-    import shlex
-
-    # more syscall hackery
-    # http_cmd = 'mongoose -r %s' % dst_path
-    # http_server = subprocess.Popen(shlex.split(http_cmd))
-    from showboat.server import Server
-    server = Server(dst_path)
-    server.start()
-
+    http_server = serve_http(dst_path)
+    
     tn_path = os.path.join(dst_path, 'thumbnails')
     os.mkdir(tn_path)
 
+
     for n in range(0, n_slides):
-        slide_url = " http://127.0.0.1:8080/index.html#%d" % (n+1)
+        slide_url = "http://localhost:8080/index.html#%d" % (n+1)
         cmd = Template(config['thumbnail_cmd']).render(width=200,
                                                        height=150,
                                                        dst_path=tn_path,
@@ -87,7 +104,7 @@ def build_slide_thumbnails(dst_path, n_slides):
                                                        slide_url = slide_url)
         syscall(cmd)
 
-    server.stop()
+    http_server.kill()
 
 def view_url(url):
     # check if it is a file
@@ -102,5 +119,4 @@ def present_url(url):
         url = "file://" + url
     cmd = Template(config['present_url_cmd']).render(url=url)
     syscall(cmd)
-
 

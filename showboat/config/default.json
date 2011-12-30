@@ -7,5 +7,6 @@
     "styles_compile_cmd": "",
     "sync_cmd": "rsync -a ${src_path} ${dst_path}",
     "view_url_cmd": "open ${url}",
-    "present_url_cmd": "open -a Plainview.app ${url}"
+    "present_url_cmd": "open -a Plainview.app ${url}",
+    "http_server_cmd": "showboat_server --host=${host} --port=${port} ${root_path}"
 }

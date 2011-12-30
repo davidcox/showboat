@@ -40,7 +40,7 @@ setup(
     version='dev',
     include_package_data=True,
 
-    scripts=['scripts/showboat'],
+    scripts=['scripts/showboat', 'scripts/showboat_server'],
     
     install_requires=parse_requirements('requirements.txt'),
     dependency_links=parse_dependency_links('requirements.txt'),

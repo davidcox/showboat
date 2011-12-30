@@ -6,12 +6,10 @@ import shutil
 import shlex
 import subprocess
 import re
+import time
 
-from showboat import compile, deposit_skeleton, view_url, present_url
+from showboat import compile, deposit_skeleton, view_url, present_url, serve_http
 
-
-browser_command_template = 'open %s'
-presentation_command_template = 'open -a /Applications/Plainview.app "%s"'
 
 parser = argparse.ArgumentParser(description='Compile a showboat presentation')
 parser.add_argument('command', type=str,
@@ -40,12 +38,23 @@ elif args.command == 'present':
     compile(args.src_path, args.out_path, copy_assets=args.copy_assets)
     present_url(index_path)
 elif args.command == 'serve':
-    compile(args.src_path, args.out_path, copy_assets=args.copy_assets)
-
-    from showboat.server import Server
-    server = Server(args.out_path)
-    server.start()
     
+    src_path = args.src_path
+    if not os.path.exists(os.path.join(src_path, 'index.html')):
+        src_path = os.path.join(src_path, 'output')
+    
+    http_server = serve_http(src_path)
+    print("HTTP Server launched on http://localhost:8080.html. Press Ctl-C to quit.")
+
     view_url('http://localhost:8080/index.html')
+
+    
+    try:
+        while True:
+            time.sleep(1.0)
+    except KeyboardInterrupt:
+        print('Quitting...')
+        http_server.kill()
+        
 else:
     raise Exception('Unknown command: %s' % args.command)

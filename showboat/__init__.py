@@ -66,10 +66,3 @@ def compile(src_path, out_path, copy_assets=False, overwrite_output=True,
         # count the number of slides
         n_slides = count_n_slides(out_path)
         build_slide_thumbnails(out_path, n_slides)
-
-
-def serve(path, ip, port):
-    server.start(path, ip='127.0.0.1', port=8080)
-
-def stop_serving():
-    server.stop()  
