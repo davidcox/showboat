@@ -57,7 +57,7 @@ div.slide {
   bottom: 0;
   left: 0;
   right: 0;
-  line-height: 120%;
+  /*line-height: 120%;*/
   background-color: transparent;
   /*min-width: 600px; 
   max-width: 1200px; */
@@ -85,6 +85,18 @@ img.fs {
   width: 100%;
   height: 100%;
 }
+
+
+h1,h2,h3 { font-weight: normal; text-align: center; margin: 0.5em 0; }*/
+h1 { font-size: 5em; }
+h2 { font-size: 3em; }
+h3 { font-size: 2em; }
+
+pre { margin: 1em 40px; padding: .25em; }
+
+.notes { display: none }
+.hidden { position:absolute; top:0; left:-9999px; width:1px; height:1px; overflow:hidden; }
+
 
 .grayed_out {
   opacity: 0.25;
@@ -131,23 +143,3 @@ div.vertically_centered{
   height: 25%;
 }
 
-
-/*.three_parts img {
-  vertical-align: 'center';
-  width: 100%;
-}
-
-.three_parts .left {
-  left: 10%;
-  right: 32%;
-}
-
-.three_parts .middle {
-  left: 37%;
-  right: 59%;
-}
-
-.three_parts .right {
-  left: 64%;
-  right: 90%;
-}*/

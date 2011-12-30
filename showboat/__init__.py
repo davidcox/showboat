@@ -42,7 +42,7 @@ def compile(src_path, out_path, copy_assets=False, overwrite_output=True,
     # compile the coffeescript
     coffeescript_compile(out_path)
     
-    assets_path = os.path.abspath(config['assets_path'])
+    assets_path = os.path.abspath(os.path.expanduser(config['assets_path']))
     
     # symlink or copy in the global assets, if they exist
     if os.path.exists(assets_path):
@@ -57,7 +57,9 @@ def compile(src_path, out_path, copy_assets=False, overwrite_output=True,
                 shutil.copytree(asset_src, asset_dst)
             else:
                 os.symlink(asset_src, asset_dst)
-    
+    else:
+        print("No assets directory found")
+        
     # compile the jade
     jade_compile(src_path, out_path)
     
