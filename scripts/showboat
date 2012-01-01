@@ -7,17 +7,22 @@ import time
 from showboat import compile, deposit_skeleton, view_url, present_url, serve_http
 
 
-parser = argparse.ArgumentParser(description='Compile a showboat presentation')
+parser = argparse.ArgumentParser(description='Create or show a showboat presentation')
 parser.add_argument('command', type=str,
                     help='the command for showboat to perform')
-parser.add_argument('src_path', default='.', nargs='?',
-                    help='the project path')
 parser.add_argument('--copy_assets', action='store_true', default=False,
                     help='copy, rather than symlink, the assets directory')
 parser.add_argument('--out_path', '-o', default='./output',
                     help='an alternative location to deposit the built presentation')
 parser.add_argument('--recompile', action='store_true', default=False,
                     help='overwrite an existing compiles of the presentation')
+parser.add_argument('--force', dest='recompile', action='store_true',
+                    help='overwrite an existing compiles of the presentation')
+parser.add_argument('--nothumbs', action='store_true', default=False,
+                    help='do not make slide thumbnails')
+parser.add_argument('--src_path', default='.',
+                    help='the project path')
+
 
 args = parser.parse_args()
 
@@ -34,7 +39,8 @@ else:
                     args.recompile or 
                     not os.path.exists(index_path))
     if must_compile:
-        compile(args.src_path, args.out_path, copy_assets=args.copy_assets)
+        compile(args.src_path, args.out_path, copy_assets=args.copy_assets,
+                build_thumbnails=(not args.nothumbs))
     
     if args.command == 'recompile':
         pass
@@ -54,18 +60,18 @@ else:
         if not os.path.exists(os.path.join(src_path, 'index.html')):
             src_path = os.path.join(src_path, 'output')
     
-        http_server = serve_http(src_path)
-        print(("HTTP Server launched on http://localhost:8080.html. " +
-              "Press Ctl-C to quit."))
+        with serve_http(src_path):
+            print(("HTTP Server launched on http://localhost:8080.html. " +
+                  "Press Ctl-C to quit."))
 
-        try:
-            view_url('http://localhost:8080/index.html')
+            try:
+                view_url('http://localhost:8080/index.html')
 
-            while True:
-                time.sleep(1.0)
-        except KeyboardInterrupt:
-            print('Quitting...')
-            http_server.kill()
+                while True:
+                    time.sleep(1.0)
+            except KeyboardInterrupt:
+                print('Quitting...')
+                #http_server.kill()
         
     else:
         raise Exception('Unknown command: %s' % args.command)

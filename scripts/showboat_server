@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
 import bottle
-from showboat.util import *
+from showboat.util import launch_external_svg_editor
 from mako.template import Template
 import argparse
+
 
 # parse commandline args
 parser = argparse.ArgumentParser(description='Serve a showboat presentation')
@@ -19,11 +20,9 @@ app = bottle.Bottle()
 # TODO: routes for launching editing applications on the "server"-side
 # wouldn't it be neat if there were an "edit" option that could locally launch 
 # whatever external editor I like?
-@app.route('/edit/<path:path>')
-def edit(path):
-    cmd = Template(config['editor_cmd']).render(path=path)
-    syscall(cmd)
-
+@app.route('/edit/svg/<file_path:path>')
+def edit(file_path):
+    launch_external_svg_editor(file_path)
 
 @app.route('/<path:path>')
 def static_route(path):

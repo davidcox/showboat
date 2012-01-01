@@ -8,6 +8,7 @@ import subprocess
 from mako.template import Template
 import urllib
 import time
+from contextlib import contextmanager
 
 top_level_module_name = __name__.split('.')[0]
 
@@ -40,8 +41,9 @@ def rsync(src, dst):
 def jade_compile(src_path, dst_path):
     #os.system('jade %s --out %s' % (src_path, dst_path))
     index_path = resource_filename(top_level_module_name, 'payload/index.jade')
-    
+    lib_path = resource_filename(top_level_module_name, 'payload/showboat.jade')
     shutil.copy(index_path, dst_path)
+    shutil.copy(lib_path, dst_path)
 
     for f in os.listdir(src_path):
         try:
@@ -64,6 +66,7 @@ def count_n_slides(out_path):
         n = len(re.findall(r'class\s*\=\s*\"slide\"', html))
         return n
 
+@contextmanager
 def serve_http(root_path, host='localhost', port=8080, timeout=2.0):
     cmd = Template(config['http_server_cmd']).render(root_path=root_path,
                                                      host=host,
@@ -85,26 +88,42 @@ def serve_http(root_path, host='localhost', port=8080, timeout=2.0):
     if not connected:
         raise IOError('Unable to connect to internally-launched HTTP server')
         
-    return proc
+    yield proc
 
-def build_slide_thumbnails(dst_path, n_slides):
+    proc.kill()
 
-    http_server = serve_http(dst_path)
+def build_slide_thumbnails(dst_path, n_slides, async=True):
+
+    print('Building thumbnails... ')
+    tic = time.time()
     
-    tn_path = os.path.join(dst_path, 'thumbnails')
-    os.mkdir(tn_path)
+    with serve_http(dst_path):
+    
+        tn_path = os.path.join(dst_path, 'thumbnails')
+        os.mkdir(tn_path)
+    
+        def generate_one_thumbnail(n):
+            slide_url = "http://localhost:8080/index.html#%d" % (n+1)
+            cmd = Template(config['thumbnail_cmd']).render(width=200,
+                                                           height=150,
+                                                           dst_path=tn_path,
+                                                           slide_number = n+1,
+                                                           slide_url = slide_url)
+            syscall(cmd)
 
+        if async:
+            from threading import Thread
+            from functools import partial
+            threads = [Thread(target=partial(generate_one_thumbnail, n)) \
+                       for n in range(0, n_slides)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+        else:
+            map(generate_one_thumbnail, range(0, n_slides))
 
-    for n in range(0, n_slides):
-        slide_url = "http://localhost:8080/index.html#%d" % (n+1)
-        cmd = Template(config['thumbnail_cmd']).render(width=200,
-                                                       height=150,
-                                                       dst_path=tn_path,
-                                                       slide_number = n+1,
-                                                       slide_url = slide_url)
-        syscall(cmd)
-
-    http_server.kill()
+    print('Done building thumbnails (took %f seconds).' % (time.time()-tic) )
 
 def view_url(url):
     # check if it is a file
@@ -119,4 +138,23 @@ def present_url(url):
         url = "file://" + url
     cmd = Template(config['present_url_cmd']).render(url=url)
     syscall(cmd)
+
+def launch_external_svg_editor(path):
+    file_path = os.path.join(config['assets_path'], 'svg', path)
+    file_path = os.path.abspath(os.path.expanduser(file_path))
+    
+    split_path = os.path.split(file_path)
+    file_name = split_path[-1]
+    file_name_noext = ".".join(file_name.split(".")[0:-1])
+    file_ext = file_name.split(".")[-1]
+    containing_path = os.path.join(*split_path[0:-1])
+    
+    cmd_template = config['edit_svg_cmd']
+    cmd = Template(cmd_template).render(file_path=file_path,
+                                        file_name=file_name,
+                                        file_name_noext=file_name_noext,
+                                        containing_path=containing_path,
+                                        file_ext=file_ext)
+    syscall(cmd)
+    return cmd
 

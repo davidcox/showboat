@@ -16,25 +16,43 @@ build_types =
         do: -> $(target).hide()
         undo: -> $(target).show()
     
-    fade_in: (target, duration='slow') ->
-        do: -> $(target).animate({'opacity': 1.0}, duration)
-        undo: -> $(target).animate({'opacity': 0.0}, 'fast')
+    # fade_in: (target, duration='slow') ->
+    #     do: -> $(target).animate({'opacity': 1.0}, duration)
+    #     undo: -> $(target).animate({'opacity': 0.0}, 'fast')
+    fade_in: (target, duration=500) ->
+        do: -> d3.select(target).style('display', 'yes')
+                                .transition()
+                                .duration(duration)
+                                .style('opacity', 1.0)
+        undo: -> d3.select(target).style('display', 'yes')
+                                  .style('opacity', 0.0)
+                                  
+
     
-    fade_out: (target, duration='slow') ->
-        do: -> $(target).stop().animate({'opacity': 0.0}, duration)
-        undo: -> $(target).stop().animate({'opacity': 1.0}, 'fast')
+    # fade_out: (target, duration='slow') ->
+    #     do: -> $(target).animate({'opacity': 0.0}, duration)
+    #     undo: -> $(target).animate({'opacity': 1.0}, 'fast')
+        
+    fade_out: (target, duration=500) ->
+        do: -> d3.select(target).style('display', 'yes')
+                                .transition()
+                                .duration(duration)
+                                .style('opacity', 0.0)
+                                
+        undo: -> d3.select(target).style('display', 'yes')
+                                  .style('opacity', 1.0)
         
     opacity: (target, op, duration='slow') ->
         @last_opacity
         do: ->
             @last_opacity = $(target).css('opacity')
             lo = @last_opacity
-            $(target).stop().animate({'opacity': op}, duration)
+            $(target).animate({'opacity': op}, duration)
         undo: ->
             # restore a previously stored opacity, if one is available 
             if @last_opacity != undefined
                 lo = @last_opacity
-                $(target).stop().animate({'opacity': lo}, 'fast')
+                $(target).animate({'opacity': lo}, 'fast')
             else
                 # if last_opacity is undefined, check if one is specified
                 if $(target).css('opacity')
@@ -56,6 +74,7 @@ class Slide
     constructor: (@slide_div) ->
         @build_list = []
         @current_build = 0
+        @first_show = true
         
         if !slide_div.attr('id')
             unique_id = 'slide_' + n_slides_global++
@@ -112,12 +131,14 @@ class Slide
             b.attr('id', 'build_' + bl.length)
 
         # set the slide content to an appropriate initial state
+        #build.do() for build in @build_list
         @reset()
         
         return this
 
     reset: ->
         build.undo() for build in @build_list.slice(0).reverse()
+        @current_build = 0
     
     hasBuilds: -> !@build_list.empty
 
@@ -141,12 +162,11 @@ class Slide
             return true
     
     show: ->
+        if @first_show
+            @reset()
+            @first_show = false
         $(@slide_div).show()
         
-        # give focus to any embeds, in case they need it (worth a try...)
-        $('embed, video', @slide_div).focus()
-        $('embed, video', @slide_div).trigger('click')
-    
     hide: ->
         $(@slide_div).hide()
 
@@ -169,12 +189,19 @@ class Presentation
         @slides = []
         @current_slide_idx = 0
         
+        # preprocess the DOM
+        @preprocess()
+        
         # load the slides
         sl = @slides
         $('.slide').each (i) -> 
             s = new Slide($(this))
             sl.push(s)
             
+        # display the first slide
+        @checkURLBarLocation()
+        @showCurrent()
+        
         # bind appropriate handlers
         document.onkeydown = (evt) => @keyDown(evt)
         
@@ -185,6 +212,28 @@ class Presentation
         # the slideshow
         @checkURLBarPeriodically(100)
         
+        # experimental: attach edit handlers to svgs
+        # $('.svg_container').onchange = (evt) -> $.ajax.get(this.attr('src'))
+        console.log("here")
+    
+    preprocess: ->
+        # change the faux include commands to properly included dom
+        $('.include').each (i) ->
+            div = $(this)
+            path = div.attr('src')
+            console.log("Here: #{path}, #{div}")
+            if div
+                d3.xml(path, (xml) -> 
+                    console.log("div: #{div}, xml: #{xml.documentElement}")
+                    div.get(0).appendChild(xml.documentElement))
+            #div.load(path)
+        
+        $('g').each (i) ->
+            op = $(this).css('opacity')
+            console.log("opacity = #{op}")
+            if $(this).css('opacity') == undefined
+                $(this).css('opacity', 1.0)
+                
     # -----------------------------------------------------------------------
     # Movement
     # -----------------------------------------------------------------------
@@ -221,10 +270,13 @@ class Presentation
         @current_slide_idx = i
     
     showCurrent: ->
+        # @resetCurrent()
         s.hide() for s in @slides
         @slides[@current_slide_idx].show()
         location.hash = @current_slide_idx + 1
         
+    resetCurrent: ->
+        @slides[@current_slide_idx].reset()
 
     # build out the next increment of the current slide
     advanceBuild: ->
@@ -252,7 +304,8 @@ class Presentation
             when 37, 33, 38 then @revert()
             # right arrow, page down, down arrow
             when 39, 34, 30 then @advance()
-            when 84, 67 then @toggleTOC()
+            when 84, 67 then @toggleTOC()  # c
+            when 82 then @resetCurrent()   # r
     
     generateThumbnailForSlide: (i, target_parent) ->
         slide_div = $('.slide').get(i)
@@ -296,7 +349,7 @@ class Presentation
             
             # generate a faux-thumbnail
             #p.generateThumbnailForSlide(i, li)
-            a.append("<img src=\"thumbnails/slide_#{i+1}-thumb.png\" width=\"200\" height=\"150\"/>")
+            a.append("<img src=\"thumbnails/slide_#{i+1}-thumb.png\" width=\"200\" height=\"150\" alt=\"\"/>")
             
             li.append(a)
             
