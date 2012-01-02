@@ -95,6 +95,7 @@ build_types =
         undo: (cb) -> 
             b.undo() for b in subbuilds
             cb() if cb
+
 # a slide object
 class Slide
     @build_list
@@ -388,8 +389,12 @@ class Presentation
         $('#presentation_controls input').hover(hover_on, hover_off)
         
         $('#presentation_controls').draggable()
+        $('#presentation_controls').addClass('ui-widget-shadow')
         
         $('#presentation_controls').hide()
+        
+        $('body').append('<div id="veil"></div>')
+        $('veil').hide()
        
     toggleControls: ->
         $('#presentation_controls').toggle()
@@ -400,8 +405,10 @@ class Presentation
         
         if @edit_enabled
             $('.include').on('click.edit_include', ->
-                $.get('edit/' + $(this).attr('src')))
+                $.get('edit/' + $(this).attr('src'))
+                $('#veil').fadeIn('slow'))
         else
+            $('#veil').fadeOut('slow')
             $('.include').unbind('click.edit_include')
             @loadIncludes()
             @showCurrent( p.resetCurrent() )
