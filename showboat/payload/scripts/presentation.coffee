@@ -4,67 +4,97 @@ n_slides_global = 0
 # Slides and Builds
 # -----------------------------------------------------------------------
 
+recursiveDoBuilds = (builds, cb) ->
+    builds = builds.slice(0)
+    if builds.length is 0
+        cb() if cb
+        return
+    b = builds.shift()
+    b.do(-> recursiveDoBuilds(builds, cb))
+
+recursiveUndoBuilds = (builds, cb, n=undefined) ->
+    if n is undefined
+        n = builds.length
+    
+    alert(n)
+        
+    if n == 0
+        cb() if cb
+        return
+    b = builds[n-1]
+    n_prime = n-1
+    b.undo(-> arguments.callee(builds, cb, n_prime))
+
+
 # a dictionary of object for executing builds
 # should be able to add new ones at any point
 build_types =
     appear: (target) ->
-        do: -> $(target).show()
-        undo: -> $(target).hide()
+        do: (cb) -> $(target).show(0, cb)
+        undo: (cb) -> $(target).hide(0, cb)
     
     disappear: (target) ->
-        do: -> $(target).hide()
-        undo: -> $(target).show()
+        do: (cb) -> $(target).hide(0, cb)
+        undo: (cb) -> $(target).show(0, cb)
     
-    # fade_in: (target, duration='slow') ->
-    #     do: -> $(target).animate({'opacity': 1.0}, duration)
-    #     undo: -> $(target).animate({'opacity': 0.0}, 'fast')
-    fade_in: (target, duration=500) ->
-        do: -> d3.select(target).style('display', 'yes')
-                                .transition()
-                                .duration(duration)
-                                .style('opacity', 1.0)
-        undo: -> d3.select(target).style('display', 'yes')
-                                  .style('opacity', 0.0)
+    fade_in: (target, duration='slow') ->
+        do: (cb) -> $(target).animate({'opacity': 1.0}, duration, cb)
+        undo: (cb) -> $(target).animate({'opacity': 0.0}, 0, cb)
+    # fade_in: (target, duration=500) ->
+    #     do: -> d3.select(target).style('display', 'yes')
+    #                             .transition()
+    #                             .duration(duration)
+    #                             .style('opacity', 1.0)
+    #     undo: -> d3.select(target).style('display', 'yes')
+    #                               .style('opacity', 0.0)
                                   
 
     
-    # fade_out: (target, duration='slow') ->
-    #     do: -> $(target).animate({'opacity': 0.0}, duration)
-    #     undo: -> $(target).animate({'opacity': 1.0}, 'fast')
+    fade_out: (target, duration='slow') ->
+        do: (cb) -> $(target).animate({'opacity': 0.0}, duration, cb)
+        undo: (cb) -> $(target).animate({'opacity': 1.0}, 0, cb)
         
-    fade_out: (target, duration=500) ->
-        do: -> d3.select(target).style('display', 'yes')
-                                .transition()
-                                .duration(duration)
-                                .style('opacity', 0.0)
-                                
-        undo: -> d3.select(target).style('display', 'yes')
-                                  .style('opacity', 1.0)
+    # fade_out: (target, duration=500) ->
+    #     do: -> d3.select(target).style('display', 'yes')
+    #                             .transition()
+    #                             .duration(duration)
+    #                             .style('opacity', 0.0)
+    #                             
+    #     undo: -> d3.select(target).style('display', 'yes')
+    #                               .style('opacity', 1.0)
         
     opacity: (target, op, duration='slow') ->
         @last_opacity
-        do: ->
+        do: (cb) ->
             @last_opacity = $(target).css('opacity')
             lo = @last_opacity
-            $(target).animate({'opacity': op}, duration)
-        undo: ->
+            $(target).animate({'opacity': op}, duration, cb)
+        undo: (cb) ->
             # restore a previously stored opacity, if one is available 
             if @last_opacity != undefined
                 lo = @last_opacity
-                $(target).animate({'opacity': lo}, 'fast')
+                $(target).animate({'opacity': lo}, 0, cb)
             else
                 # if last_opacity is undefined, check if one is specified
                 if $(target).css('opacity')
                     @last_opacity = $(target).css('opacity')
+                cb() if cb
     
     play: (target) ->
-        do: -> try $(target).get(0).play()
-        undo: -> try $(target).get(0).pause().rewind()
+        do: (cb) -> 
+            try $(target).get(0).play()
+            cb() if cb
+        undo: (cb) -> 
+            try $(target).get(0).pause().rewind()
+            cb() if cb
 
     composite: (subbuilds) ->
-        do: -> b.do() for b in subbuilds
-        undo: -> b.undo() for b in subbuilds
-        
+        do: (cb) -> 
+            b.do() for b in subbuilds
+            cb() if cb
+        undo: (cb) -> 
+            b.undo() for b in subbuilds
+            cb() if cb
 # a slide object
 class Slide
     @build_list
@@ -136,8 +166,13 @@ class Slide
         return this
 
     reset: ->
+        # if @build_list.length > 0
+        #   recursiveUndoBuilds(@build_list)
         build.undo() for build in @build_list.slice(0).reverse()
         @current_build = 0
+        
+    fullReset: ->
+        @first_show = true
     
     hasBuilds: -> !@build_list.empty
 
@@ -160,11 +195,11 @@ class Slide
             @build_list[@current_build].undo()    
             return true
     
-    show: ->
+    show: (cb) ->
         if @first_show
             @reset()
             @first_show = false
-        $(@slide_div).show()
+        $(@slide_div).show(0, cb)
         
     hide: ->
         $(@slide_div).hide()
@@ -189,7 +224,7 @@ class Presentation
         @current_slide_idx = 0
         
         # preprocess the DOM
-        @preprocess()
+        @loadIncludes()
         
         # load the slides
         sl = @slides
@@ -217,17 +252,25 @@ class Presentation
         # experimental: attach edit handlers to svgs
         # $('.svg_container').onchange = (evt) -> $.ajax.get(this.attr('src'))
         
+        # a queue to ensure that user commands happen in some kind of sane 
+        # sequence (actually, it's an empty element)
+        @actions = $({})
     
-    preprocess: ->
+    loadIncludes: ->
+        p = this
+        
         # change the faux include commands to properly included dom
         $('.include').each (i) ->
             div = $(this)
+            div.empty()
             path = div.attr('src')
             console.log("Here: #{path}, #{div}")
             if div
                 d3.xml(path, (xml) -> 
                     console.log("div: #{div}, xml: #{xml.documentElement}")
-                    div.get(0).appendChild(xml.documentElement))
+                    div.get(0).appendChild(xml.documentElement)
+                    p.showCurrent(-> p.resetCurrent())
+                    )
         
         
         $('g').each (i) ->
@@ -254,6 +297,18 @@ class Presentation
             @revertSlide()
             
 
+    advanceQueued: ->
+        p = this
+        a = @actions
+        a.queue('user_interaction', -> p.advance() )
+        a.dequeue('user_interaction')
+    
+    revertQueued: ->
+        p = this
+        a = @actions
+        a.queue('user_interaction', -> p.revert() )
+        a.dequeue('user_interaction')
+        
     # move to next slide
     advanceSlide: ->
         @current_slide_idx += 1
@@ -271,10 +326,9 @@ class Presentation
     setCurrent: (i) ->
         @current_slide_idx = i
     
-    showCurrent: ->
-        # @resetCurrent()
-        s.hide() for s in @slides
-        @slides[@current_slide_idx].show()
+    showCurrent: (cb)->
+        @slides[i].hide() for i in [0 .. @slides.length-1] when i isnt @current_slide_idx
+        @slides[@current_slide_idx].show(cb)
         location.hash = @current_slide_idx + 1
         
     resetCurrent: ->
@@ -303,9 +357,9 @@ class Presentation
                 else 
                     @revert()
             # left arrow, page up, up arrow
-            when 37, 33, 38 then @revert()
+            when 37, 33, 38 then @revertQueued()
             # right arrow, page down, down arrow
-            when 39, 34, 30 then @advance()
+            when 39, 34, 30 then @advanceQueued()
             when 84, 67 then @toggleTOC()  # c
             when 82 then @resetCurrent()   # r
             when 80 then @toggleControls() # p
@@ -342,12 +396,17 @@ class Presentation
         
     
     editMode: (@edit_enabled) ->
+        p = this
         
         if @edit_enabled
-            $('svg:parent').on('click.edit_svg', ->
-                d3.get('edit/' + $(this).attr('src')))
+            $('.include').on('click.edit_include', ->
+                $.get('edit/' + $(this).attr('src')))
         else
-            $('svg:parent').unbind('click.edit_svg')
+            $('.include').unbind('click.edit_include')
+            @loadIncludes()
+            @showCurrent( p.resetCurrent() )
+            
+            
     
     generateThumbnailForSlide: (i, target_parent) ->
         slide_div = $('.slide').get(i)

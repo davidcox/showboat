@@ -28,4 +28,4 @@ def edit(file_path):
 def static_route(path):
     return bottle.static_file(path, args.src_path)
 
-bottle.run(app, host=args.host, port=args.port, quiet=True)
+bottle.run(app, host=args.host, port=args.port, quiet=True, server='cherrypy')

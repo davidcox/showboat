@@ -75,7 +75,7 @@ def count_n_slides(out_path):
         return n
 
 @contextmanager
-def serve_http(root_path, host='localhost', port=8080, timeout=2.0):
+def serve_http(root_path, host='localhost', port=8080, timeout=5.0):
     cmd = Template(config['http_server_cmd']).render(root_path=root_path,
                                                      host=host,
                                                      port=port)
