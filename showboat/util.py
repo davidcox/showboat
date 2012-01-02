@@ -40,15 +40,23 @@ def rsync(src, dst):
 
 def jade_compile(src_path, dst_path):
     #os.system('jade %s --out %s' % (src_path, dst_path))
-    index_path = resource_filename(top_level_module_name, 'payload/index.jade')
-    lib_path = resource_filename(top_level_module_name, 'payload/showboat.jade')
-    shutil.copy(index_path, dst_path)
-    shutil.copy(lib_path, dst_path)
+    resource_path = resource_filename(top_level_module_name, 'payload/')
+    print("resource path: %s" % os.listdir(resource_path))
+    
+    # index_path = resource_filename(top_level_module_name, 'payload/index.jade')
+    # shutil.copy(index_path, dst_path)
+    
+    #lib_path = resource_filename(top_level_module_name, 'payload/showboat.jade')
+    #shutil.copy(lib_path, dst_path)
 
-    for f in os.listdir(src_path):
+    src_files = [os.path.join(src_path, f) for f in os.listdir(src_path)]
+    resource_files = [os.path.join(resource_path, f) for f in 
+                      os.listdir(resource_path)]
+
+    for f in (resource_files + src_files):
         try:
             if f.split('.')[-1] == 'jade':
-                shutil.copy(os.path.abspath(f), dst_path)
+                shutil.copy(os.path.abspath(os.path.expanduser(f)), dst_path)
         except:
             pass
     jade_cmd = Template(config['html_compile_cmd']).render(dst_path=dst_path)

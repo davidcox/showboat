@@ -4,7 +4,6 @@ n_slides_global = 0
 # Slides and Builds
 # -----------------------------------------------------------------------
 
-
 # a dictionary of object for executing builds
 # should be able to add new ones at any point
 build_types =
@@ -202,6 +201,9 @@ class Presentation
         @checkURLBarLocation()
         @showCurrent()
         
+        # add a slide controls overlay
+        @initControls()
+        
         # bind appropriate handlers
         document.onkeydown = (evt) => @keyDown(evt)
         
@@ -214,7 +216,7 @@ class Presentation
         
         # experimental: attach edit handlers to svgs
         # $('.svg_container').onchange = (evt) -> $.ajax.get(this.attr('src'))
-        console.log("here")
+        
     
     preprocess: ->
         # change the faux include commands to properly included dom
@@ -226,7 +228,7 @@ class Presentation
                 d3.xml(path, (xml) -> 
                     console.log("div: #{div}, xml: #{xml.documentElement}")
                     div.get(0).appendChild(xml.documentElement))
-            #div.load(path)
+        
         
         $('g').each (i) ->
             op = $(this).css('opacity')
@@ -306,6 +308,46 @@ class Presentation
             when 39, 34, 30 then @advance()
             when 84, 67 then @toggleTOC()  # c
             when 82 then @resetCurrent()   # r
+            when 80 then @toggleControls() # p
+    
+    initControls: ->
+        # copy "this" into a variable for the sake of the closure
+        p = this
+        
+        back_btn = $('#back_button')
+        back_btn.button({icons: {primary: 'ui-icon-triangle-1-w'}, text: false})
+        back_btn.click -> p.revert()
+        
+        
+        fwd_btn = $('#forward_button')
+        fwd_btn.button({icons: {primary: 'ui-icon-triangle-1-e'}, text: false})
+        fwd_btn.click -> p.advance()
+
+        edit_btn = $('#edit_button')
+        #edit_btn.button()
+        edit_btn.button({icons: {primary: 'ui-icon-pencil'}, text: false})
+        edit_btn.click -> p.editMode(edit_btn.attr('checked') == 'checked')
+        
+        hover_on = -> $(this).addClass('ui-state-hover')
+        hover_off = -> $(this).removeClass('ui-state-hover')
+        $('#presentation_controls button').hover(hover_on, hover_off)
+        $('#presentation_controls input').hover(hover_on, hover_off)
+        
+        $('#presentation_controls').draggable()
+        
+        $('#presentation_controls').hide()
+       
+    toggleControls: ->
+        $('#presentation_controls').toggle()
+        
+    
+    editMode: (@edit_enabled) ->
+        
+        if @edit_enabled
+            $('svg:parent').on('click.edit_svg', ->
+                d3.get('edit/' + $(this).attr('src')))
+        else
+            $('svg:parent').unbind('click.edit_svg')
     
     generateThumbnailForSlide: (i, target_parent) ->
         slide_div = $('.slide').get(i)

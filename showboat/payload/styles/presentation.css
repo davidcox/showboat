@@ -71,6 +71,41 @@ div#toc img {
   max-height: 12%;
 }
 
+/* Presentation Controls */
+
+#presentation_controls {
+    position: absolute;
+    top: 90%;
+    left: 30%;
+    background: rgba(0,0,0, 0.3);
+    z-index: 300;
+    margin: 0; 
+    padding: 10 30; 
+    border-radius:10px;
+}
+
+#presentation_controls button {
+    position: relative; 
+    cursor: pointer;
+    width:27;
+    height:27;
+}
+
+#presentation_controls input {
+/*    position: relative; */
+    cursor: pointer;
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+#presentation_controls label {
+    padding:0;
+    margin:0;
+    height:25;
+    width:25;
+}
+
 /* Images */
 
 img {
