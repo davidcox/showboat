@@ -11,6 +11,7 @@ html
     link(rel='stylesheet', href='styles/presentation.css', type='text/css')
     link(rel='stylesheet', 
          href='styles/ui-darkness/jquery-ui-1.8.16.custom.css')
+    link(rel='stylesheet', href='styles/ui.notify.css')
     
     // Scripts
     
@@ -26,6 +27,9 @@ html
     script(src='scripts/jquery.svganim.js')
     script(src='scripts/jquery.svgfilter.js')
     
+    // growl-style notifications: https://github.com/ehynds/jquery-notify
+    script(src='scripts/jquery.notify.js')
+    
     // d3.js
     script(src='scripts/d3.js')
     
@@ -33,5 +37,6 @@ html
     script(src='scripts/presentation.js')
     
   body
+  
     include slides.jade
     include controls.jade

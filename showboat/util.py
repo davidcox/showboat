@@ -166,9 +166,22 @@ def launch_external_svg_editor(path):
     syscall(cmd)
     return cmd
 
-def save_svg_file(path, contents):
+def save_svg_file(path, contents, viewbox_hack=True):
+    
     file_path = os.path.join(config['assets_path'], 'svg', path)
     file_path = os.path.abspath(os.path.expanduser(file_path))
+    
+    if viewbox_hack:
+        import re
+        # a quick hack to restore the viewbox, which svg-edit destroys
+        with open(file_path, 'r') as f:
+            old_content = '\n'.join(f.readlines())
+            vbs = re.findall(r'viewBox\s*=\s*\"(.+?)\"', old_content)
+            if len(vbs) == 1:
+                vb = vbs[0]
+                
+                # hacky hack hack hack
+                contents = re.sub('<svg', '<svg viewBox="%s"'%vb, contents)
     
     with open(file_path, 'w') as f:
         f.write(contents)

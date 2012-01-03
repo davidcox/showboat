@@ -409,15 +409,17 @@ class Presentation
         # attach the "veil" to gray out the screen when needed
         $('body').append('<div id="veil"></div>')
         $('veil').hide()
+        
+        # prepare the notifications popups
+        $('#notification_popup').notify()
        
     toggleControls: ->
         $('#presentation_controls').toggle()
      
-    transientMessage: (msg, duration=1000) ->
-        msg_div = $('<div class="modal_message"><span>' + msg + '</span></div>')
-        $('body').append(msg_div)
+    transientMessage: (title, msg="", duration=1000) ->
+        $('#notification_popup').notify('create',
+            {title: title, text: msg, expires: duration, speed: 500})
         
-        msg_div.fadeIn('fast').delay(duration).fadeOut('fast')
        
     externalEditPickerMode: (enabled) ->
         @editPickerMode(enabled, true)
@@ -510,15 +512,14 @@ class Presentation
         
         frame.load(init_editor)
         
-        # replace the include div with the svg-edit editor
+        # replace the include div contents with the svg-edit editor
         include_div.empty()
         include_div.append(frame)
         
-
-        #svg_str = window.svgEditor.svgCanvas.svgToString(svg_dom)
         
     saveInplaceEdit: (cb) ->
-        alert('Saving...')
+        @transientMessage('Saving...')
+        
         p = this
         svg_canvas = @getEditorSVGCanvas()
         
@@ -532,61 +533,19 @@ class Presentation
                 alert(err)
             
             # post the result to the showboat_server
-            # s = -> cb() if cb
-            #             e = (msg)-> alert('Unable to save SVG: ' + msg); cb() if cb
             $.ajax(
                 type: 'POST'
                 dataType: 'text'
                 timeout: 1000
                 url: 'save/' + p.currently_editted_path
-                data: {data: svg_str}
-                success: -> alert('Success!')
+                data: { data: svg_str }
+                success: -> p.transientMessage('Success!')
                 error: (XHR,stat,msg)-> alert('Unable to save SVG: ' + msg)
                 complete: cb
                 )
-            
-            # p.postStringAsFile(svg_str, 'file.svg',
-            #                   'save/' + p.currently_editted_path,
-            #                   s, e)
         )
 
-    
-    postStringAsFile: (data, filename, url, success_cb, error_cb) ->
-        $.ajax(
-            type: 'POST'
-            dataType: 'xml'
-            timeout: 100
-            url: url
-            data: {data: data}
-            success: success_cb
-            error: error_cb
-            complete: success_cb
-            )
-    
-    # postStringAsFile: (data, filename, url, success_cb, error_cb) ->
-    #     
-    #         #boundary = "---------------------------7da24f2e50046"
-    #         boundary = 'fU3W4Vzr4G3D54f3'
-    #         body = '--' + boundary + '\r\n' +
-    #              # Parameter name is "file" and local filename is "temp.txt"
-    #              'Content-Disposition: form-data; name="file";' +
-    #              'filename="' + filename + '\r\n' +
-    #              # Add the file's mime-type
-    #              'Content-type: plain/text\r\n\r\n' +
-    #              # Add your data:
-    #              data + '\r\n' +
-    #              boundary + '--'
-    # 
-    #         $.ajax(
-    #             contentType: 'multipart/form-data',
-    #             data: body,
-    #             type: 'POST',
-    #             url: url,
-    #             success: success_cb
-    #             error: error_cb
-    #         )
-    
-    
+    # Experimental, not implemented fully (didn't work right when I tried...)
     generateThumbnailForSlide: (i, target_parent) ->
         slide_div = $('.slide').get(i)
     
