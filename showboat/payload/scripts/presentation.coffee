@@ -412,6 +412,10 @@ class Presentation
         
         # prepare the notifications popups
         $('#notification_popup').notify()
+        
+        save_btn = $('#save_button').button()
+        cancel_btn = $('#cancel_button').button()
+        
        
     toggleControls: ->
         $('#presentation_controls').toggle()
@@ -461,6 +465,9 @@ class Presentation
                     
 
     reloadAfterEdit: ->    
+        
+        $('.include').removeClass('svg_editor')
+        
         # remove the clicking behavior on the include
         $('.include').unbind('click.edit_include')
         # reload
@@ -470,20 +477,7 @@ class Presentation
         # undef the svg_canvas, if needed
         @setEditorSVGCanvas(undefined)
         @currently_editted_path = undefined
-            
-    # inplaceEditPickerMode: (@inplace_edit_enabled) ->
-    #     p = this
-    #     current = p.currentSlideDiv()
-    #     if @inplace_edit_enabled
-    #         $('.include',current).css('background', 'rgb(0.5,0.5,0.5)')
-    #         $('.include',current).on('click.inplace_edit_include', ->
-    #             p.inplaceEdit($(this)))
-    #     else
-    #         # remove the clicking behavior on the include
-    #         $('.include').unbind('click.inplace_edit_include')
-    #         # reload
-    #         @loadIncludes()
-    #         @showCurrent( p.resetCurrent() )
+
 
     setEditorSVGCanvas: (@svg_canvas) ->
     getEditorSVGCanvas: -> return @svg_canvas
@@ -515,6 +509,10 @@ class Presentation
         # replace the include div contents with the svg-edit editor
         include_div.empty()
         include_div.append(frame)
+        include_div.addClass('svg_editor')
+        
+        # show the svg editor controls
+        $('#svg_editor_controls').fadeIn()
         
         
     saveInplaceEdit: (cb) ->
