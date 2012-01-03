@@ -166,3 +166,10 @@ def launch_external_svg_editor(path):
     syscall(cmd)
     return cmd
 
+def save_svg_file(path, contents):
+    file_path = os.path.join(config['assets_path'], 'svg', path)
+    file_path = os.path.abspath(os.path.expanduser(file_path))
+    
+    with open(file_path, 'w') as f:
+        f.write(contents)
+    

@@ -93,6 +93,7 @@ div#toc img {
     cursor: pointer;
     width:27;
     height:27;
+    margin: 2;
 }
 
 #presentation_controls input {
@@ -105,7 +106,7 @@ div#toc img {
 
 #presentation_controls label {
     padding:0;
-    margin:0;
+    margin:2;
     height:25;
     width:25;
 }
@@ -119,6 +120,24 @@ div#veil {
     z-index: 200;
     background: rgba(0,0,0, 0.6);
     display: none;
+}
+
+div.modal_message {
+    position: absolute;
+    display: none;
+    
+    top: 40%;
+    left: 40%;
+    bottom: 40%;
+    right: 40%;
+    
+    background: rgba(0,0,0, 0.6);
+    
+}
+
+div.modal_message span {
+    font-color: rgb(1, 1, 1);
+    vertical-align: center;
 }
 
 /* Images */

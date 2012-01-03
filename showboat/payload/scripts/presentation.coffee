@@ -166,6 +166,9 @@ class Slide
         
         return this
 
+    getDiv: ->
+        return @slide_div
+
     reset: ->
         # if @build_list.length > 0
         #   recursiveUndoBuilds(@build_list)
@@ -331,9 +334,12 @@ class Presentation
         @slides[i].hide() for i in [0 .. @slides.length-1] when i isnt @current_slide_idx
         @slides[@current_slide_idx].show(cb)
         location.hash = @current_slide_idx + 1
-        
+      
     resetCurrent: ->
         @slides[@current_slide_idx].reset()
+
+    currentSlideDiv: ->
+        return @slides[@current_slide_idx].getDiv()
 
     # build out the next increment of the current slide
     advanceBuild: ->
@@ -379,41 +385,207 @@ class Presentation
         fwd_btn.click -> p.advance()
 
         edit_btn = $('#edit_button')
-        #edit_btn.button()
-        edit_btn.button({icons: {primary: 'ui-icon-pencil'}, text: false})
-        edit_btn.click -> p.editMode(edit_btn.attr('checked') == 'checked')
+        edit_btn.button({icons: {primary: 'ui-icon-extlink'}, text: false})
+        edit_btn.click -> 
+            p.externalEditPickerMode(edit_btn.attr('checked') == 'checked')
+        
+        edit_inplace_btn = $('#edit_inplace_button')
+        edit_inplace_btn.button({icons: {primary: 'ui-icon-pencil'}, text: false})
+        edit_inplace_btn.click -> 
+            p.inplaceEditPickerMode(edit_inplace_btn.attr('checked') == 'checked')
         
         hover_on = -> $(this).addClass('ui-state-hover')
         hover_off = -> $(this).removeClass('ui-state-hover')
         $('#presentation_controls button').hover(hover_on, hover_off)
         $('#presentation_controls input').hover(hover_on, hover_off)
         
+        # Make the controls draggable
         $('#presentation_controls').draggable()
         $('#presentation_controls').addClass('ui-widget-shadow')
         
+        # hide by default
         $('#presentation_controls').hide()
         
+        # attach the "veil" to gray out the screen when needed
         $('body').append('<div id="veil"></div>')
         $('veil').hide()
        
     toggleControls: ->
         $('#presentation_controls').toggle()
+     
+    transientMessage: (msg, duration=1000) ->
+        msg_div = $('<div class="modal_message"><span>' + msg + '</span></div>')
+        $('body').append(msg_div)
         
+        msg_div.fadeIn('fast').delay(duration).fadeOut('fast')
+       
+    externalEditPickerMode: (enabled) ->
+        @editPickerMode(enabled, true)
     
-    editMode: (@edit_enabled) ->
-        p = this
+    inplaceEditPickerMode: (enabled) ->
+        @editPickerMode(enabled, false)
         
-        if @edit_enabled
-            $('.include').on('click.edit_include', ->
-                $.get('edit/' + $(this).attr('src'))
-                $('#veil').fadeIn('slow'))
+    editPickerMode: (@edit_picker_enabled, external, save=true) ->
+        p = this
+        current = p.currentSlideDiv()
+        
+        if p.edit_picker_enabled
+            
+            @transientMessage('Click on an SVG to edit')
+            # use an external editing application, via the showboat_server
+            if external
+                $('.include').on('click.edit_include', ->
+                    # launch an external editor via GET call to showboat_server
+                    $.get('edit/' + $(this).attr('src'))
+                    # gray out the screen to indicate the mode change
+                    $('#veil').fadeIn('slow'))
+            
+            # use svg-edit in-place to edit
+            else
+                $('.include',current).css('background', 'rgb(0.5,0.5,0.5)')
+                $('.include',current).on('click.edit_include', ->
+                    p.inplaceEdit($(this)))    
         else
-            $('#veil').fadeOut('slow')
-            $('.include').unbind('click.edit_include')
-            @loadIncludes()
-            @showCurrent( p.resetCurrent() )
             
+            if external
+                # remove the veil
+                $('#veil').fadeOut('slow')
+            else
+                # save the result
+                if save
+                    p.saveInplaceEdit(-> p.reloadAfterEdit())
+                else
+                    p.reloadAfterEdit()
+                    
+
+    reloadAfterEdit: ->    
+        # remove the clicking behavior on the include
+        $('.include').unbind('click.edit_include')
+        # reload
+        @loadIncludes()
+        @showCurrent( @resetCurrent() )
+        
+        # undef the svg_canvas, if needed
+        @setEditorSVGCanvas(undefined)
+        @currently_editted_path = undefined
             
+    # inplaceEditPickerMode: (@inplace_edit_enabled) ->
+    #     p = this
+    #     current = p.currentSlideDiv()
+    #     if @inplace_edit_enabled
+    #         $('.include',current).css('background', 'rgb(0.5,0.5,0.5)')
+    #         $('.include',current).on('click.inplace_edit_include', ->
+    #             p.inplaceEdit($(this)))
+    #     else
+    #         # remove the clicking behavior on the include
+    #         $('.include').unbind('click.inplace_edit_include')
+    #         # reload
+    #         @loadIncludes()
+    #         @showCurrent( p.resetCurrent() )
+
+    setEditorSVGCanvas: (@svg_canvas) ->
+    getEditorSVGCanvas: -> return @svg_canvas
+
+    inplaceEdit: (include_div) ->
+        
+        svg_path = include_div.attr('src')
+        @currently_editted_path = svg_path
+        
+        frame = $('<iframe src="scripts/svg-edit/svg-editor.html" width="100%" height="100%"></iframe>')
+        
+        p = this
+        init_editor = ->
+            # push the extracted svg to the editor
+            svg_canvas = new embedded_svg_edit(frame.get(0))
+            p.setEditorSVGCanvas(svg_canvas)
+            # load up the svg content
+            $.ajax(
+                url: svg_path
+                type: 'GET'
+                dataType: 'text'
+                timeout: 1000
+                success: (xml) ->
+                    svg_canvas.setSvgString(xml)
+            )
+        
+        frame.load(init_editor)
+        
+        # replace the include div with the svg-edit editor
+        include_div.empty()
+        include_div.append(frame)
+        
+
+        #svg_str = window.svgEditor.svgCanvas.svgToString(svg_dom)
+        
+    saveInplaceEdit: (cb) ->
+        alert('Saving...')
+        p = this
+        svg_canvas = @getEditorSVGCanvas()
+        
+        if svg_canvas is undefined
+            alert('No SVG Canvas!')
+            cb() if cb
+            return
+           
+        svg_canvas.getSvgString()( (svg_str, err) ->  
+            if err
+                alert(err)
+            
+            # post the result to the showboat_server
+            # s = -> cb() if cb
+            #             e = (msg)-> alert('Unable to save SVG: ' + msg); cb() if cb
+            $.ajax(
+                type: 'POST'
+                dataType: 'text'
+                timeout: 1000
+                url: 'save/' + p.currently_editted_path
+                data: {data: svg_str}
+                success: -> alert('Success!')
+                error: (XHR,stat,msg)-> alert('Unable to save SVG: ' + msg)
+                complete: cb
+                )
+            
+            # p.postStringAsFile(svg_str, 'file.svg',
+            #                   'save/' + p.currently_editted_path,
+            #                   s, e)
+        )
+
+    
+    postStringAsFile: (data, filename, url, success_cb, error_cb) ->
+        $.ajax(
+            type: 'POST'
+            dataType: 'xml'
+            timeout: 100
+            url: url
+            data: {data: data}
+            success: success_cb
+            error: error_cb
+            complete: success_cb
+            )
+    
+    # postStringAsFile: (data, filename, url, success_cb, error_cb) ->
+    #     
+    #         #boundary = "---------------------------7da24f2e50046"
+    #         boundary = 'fU3W4Vzr4G3D54f3'
+    #         body = '--' + boundary + '\r\n' +
+    #              # Parameter name is "file" and local filename is "temp.txt"
+    #              'Content-Disposition: form-data; name="file";' +
+    #              'filename="' + filename + '\r\n' +
+    #              # Add the file's mime-type
+    #              'Content-type: plain/text\r\n\r\n' +
+    #              # Add your data:
+    #              data + '\r\n' +
+    #              boundary + '--'
+    # 
+    #         $.ajax(
+    #             contentType: 'multipart/form-data',
+    #             data: body,
+    #             type: 'POST',
+    #             url: url,
+    #             success: success_cb
+    #             error: error_cb
+    #         )
+    
     
     generateThumbnailForSlide: (i, target_parent) ->
         slide_div = $('.slide').get(i)

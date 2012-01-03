@@ -1,12 +1,14 @@
+script(src='scripts/svg-edit/embedapi.js')
+
 
 #presentation_controls
 
   input#edit_button(type='checkbox') 
+  input#edit_inplace_button(type='checkbox') 
 
-
-  button#back_button
-  button#forward_button
-  label(for='edit_button')
-  
+  button#back_button(title='back')
+  button#forward_button(title='forward')
+  label(for='edit_button', title='edit in an external editor')
+  label(for='edit_inplace_button', title='edit in place (with svg-edit)')
   
   

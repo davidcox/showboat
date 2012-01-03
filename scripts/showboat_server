@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import bottle
-from showboat.util import launch_external_svg_editor
+from showboat.util import launch_external_svg_editor, save_svg_file
 from mako.template import Template
 import argparse
 
@@ -24,8 +24,18 @@ app = bottle.Bottle()
 def edit(file_path):
     launch_external_svg_editor(file_path)
 
+@app.post('/save/svg/<path:path>')
+def save(path):
+    data = bottle.request.forms.data
+    save_svg_file(path, data)
+
+    print("Saved to {%s}" % path)
+    return "OK"
+
 @app.route('/<path:path>')
 def static_route(path):
     return bottle.static_file(path, args.src_path)
+    
+
 
 bottle.run(app, host=args.host, port=args.port, quiet=True, server='cherrypy')
