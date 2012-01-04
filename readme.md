@@ -42,7 +42,11 @@ Also, simple slidy-style bullety things like:
             li ... and some more bullets
             li ... and some more
 
-also are possible.  Where [Showoff](http://github.com/schacon/showoff) makes markup even leaner using markdown, in Showboat, the additional level of control offered by CSS classes and ids was worth the extra few characters.  Adding animations / builds etc. to Showoff, for instance, probably would require additional ad hoc syntax on top of what has already been added to support slides (e.g. `!SLIDE` etc.).  By using Jade, Showboat gives you full control to specify anything that can be done in HTML5, which is basically just about anything you'd ever want to do.
+also are possible.  Where [Showoff](http://github.com/schacon/showoff) makes markup even leaner using markdown, in **Showboat**, I think that the additional level of control offered by CSS classes and ids was worth the extra few characters.  Adding animations / builds etc. to Showoff, for instance, probably would require additional ad hoc syntax on top of what has already been added to support slides (e.g. `!SLIDE` etc.).  By using Jade, Showboat gives you full control to specify anything that can be done in HTML5, which is basically just about anything you'd ever want to do.
+
+## Example
+
+A quicky, not-intended-to-be-particularly-coherent example slide presentation can be found at http://github.com/davidcox/showboat-example.  A live version can be found at http://davidcox.github.com/showboat-example.  It's just a static page, so none of the stuff that depends on a server will work (e.g. saving SVG inline editing).  It should give you a flavor of how I'm imagining using this things, though. 
 
 ## SVG Support, In-line editing
 
@@ -52,7 +56,7 @@ HTML was designed for displaying long flowing page layouts, and while it is poss
 
 ## Usage
 
-    showboat start my_slideshow  # start a new presentation in my_slideshow
+    showboat start --src_path=my_slideshow  # start a new presentation in my_slideshow
     cd my_slideshow
     showboat compile # compile the files and put them into output/
     showboat view  # open a browser and view
@@ -94,7 +98,7 @@ Here's an example of the one I'm using currently:
 
 I'm *really* excited about using this a platform to bring elegant data visualization into my talks, via the amazing [d3.js](http://mbostock.github.com/d3/) project.  I used to have much more data-interactivity in my talks back when I was slaving away making slides in Flash, but I think that d3 represents a quantum leap forward in interactive data visualization possibilities.
 
-There's also a lot of interesting audience-interaction potential; this seems to be what @schacon is most interested in with *[Showoff](http://github.com/schacon/showoff)*, though, being a scientist and not a web person, it is much less common for me to be giving a talk to an audience in which everyone has their laptop out.  (I may have to start teaching soon, however, so I am interested in the possibilities for student interaction with a live presentation).  Nonetheless, making a talk be a web-thingy really opens up an almost limitless canvas of possibility.
+There's also a lot of interesting audience-interaction potential; this seems to be what @schacon is most interested in with *[Showoff](http://github.com/schacon/showoff)*, though, being a scientist and not a web person, it is much less common for me to be giving a talk to an audience where everyone has their laptop out.  (I may have to start teaching soon, however, so I am interested in the possibilities for student interaction with a live presentation).  Nonetheless, making a talk be a web-thingy really opens up an almost limitless possibilities.
 
 ## Wishlist
 
@@ -109,8 +113,8 @@ Here are some features that I'm interested in adding:
 
 ## Disclaimer
 
-I'm still putting this together, so don't expect any of this to be ready yet.  I'm writing this read-me on the off-hand chance that someone stumbles across this on the web.
+I'm still putting this together, so don't expect any of this to be fully ready yet.  I'm writing this read-me on the off-hand chance that someone stumbles across this on the web and wonders what it is.
 
-Also, please note, I'm not someone who lives and breaths web technologies (at least, not for many years), so this is my first foray back into some of these web technologies.  I'm muddling along a bit in Coffeescript and CSS, so if you're interested in this project and have any suggestions or want to help, please drop me a line at davidcox@me.com.
+Also, please note, I'm not someone who lives and breathes web technologies (at least, not for many years), and this is my first foray back into some of these technologies.  I'm muddling along a bit in Coffeescript and CSS, so if you're interested in this project and have any suggestions or want to help, please drop me a line at davidcox@me.com.
 
 
