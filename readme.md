@@ -54,6 +54,26 @@ After wrestling around with HTML/CSS for a while, I discovered that I sometimes 
 
 HTML was designed for displaying long flowing page layouts, and while it is possible to exert exact x/y control, this is a job better suited to the SVG format.  Showboat supports inclusion and "building" of SVG content, and it also allows for in-line, in browser SVG editing, via the excellent [svg-edit project](http://code.google.com/p/svg-edit/).  Document saving is supported by the `showboat serve` command, which provides the client-side scripts with a lifeline to your local filesystem via a locally running server.
 
+## Dependencies
+
+Showboat needs the following external parts to work:
+
+* [Jade](http://jade-lang.org): for minimal markup
+* [Coffeescript](http://coffeescript.org): for the main script (I found this much preferable to "raw" javascript)
+* [webkit2png](http://www.paulhammond.org/webkit2png/): for making thumbnails (optional)
+
+All of the above are `brew install`-able on Mac, though using a different tool (e.g. for making the thumbnails) is just a matter of changing the helper command (see *Helpers*, below).
+
+I also like launching presentations in [Plainview](http://barbariangroup.com/software/plainview), though Google Chrome also has a nice "presentation mode" that does a similar job.
+
+## Installation
+
+
+    git clone https://github.com/davidcox/showboat
+    cd showboat
+    pip install .  # if you have pip installed (recommended)
+    python setup.py install # if you don't
+
 ## Usage
 
     showboat start --src_path=my_slideshow  # start a new presentation in my_slideshow
