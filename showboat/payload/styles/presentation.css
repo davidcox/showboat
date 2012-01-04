@@ -41,6 +41,7 @@ div.title { display: none; }
 
 div.include {
     z-index: 100;
+    display: inline;
 }
 
 /* Table of contents */
@@ -130,16 +131,29 @@ div.svg_editor {
     bottom:10%;
 }
 
+
 div#svg_editor_controls{
     position: absolute;
-    top: 90%;
+    top: 95%;
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgb(0.2,0.2,0.2);
+    background-color: #222;
     display: none;
     z-index: 250;
+    padding: 5;
 }
+
+.centered_buttons {
+  margin: auto;
+  text-align: center;
+}
+
+#svg_editor_controls button {
+  height: 30;
+  font-size: 12;
+}
+
 
 /* Images */
 
@@ -157,6 +171,7 @@ img.fullscreen {
 .fullscreen svg {
   width: 100%;
   height: 100%;
+  display: inline;
 }
 
 .fullscreen img {

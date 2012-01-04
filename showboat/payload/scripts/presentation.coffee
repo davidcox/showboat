@@ -26,6 +26,20 @@ recursiveUndoBuilds = (builds, cb, n=undefined) ->
     b.undo(-> arguments.callee(builds, cb, n_prime))
 
 
+# Hack to convince Webkit to actually, you know, display stuff...
+refreshVisibility = (parent) ->
+    includes = $('.include', parent)
+    includes.each ->
+        local_parent = $(this)
+        $('svg', local_parent).each -> 
+            svg = $(this).remove()
+            local_parent.append(svg)
+            #parent.append(removed)
+    
+    # $('svg', parent).each ->
+    #     if op = $(this).css('opacity')
+    #         $(this).css('opacity', op)
+
 # a dictionary of object for executing builds
 # should be able to add new ones at any point
 build_types =
@@ -205,6 +219,9 @@ class Slide
             @first_show = false
         $(@slide_div).show(0, cb)
         
+        # I'm not sure why this is needed...
+        refreshVisibility(@slide_div)
+        
     hide: ->
         $(@slide_div).hide()
 
@@ -252,13 +269,14 @@ class Presentation
         # setup up a recurring check to sync the browser location field with
         # the slideshow
         @checkURLBarPeriodically(100)
-        
-        # experimental: attach edit handlers to svgs
-        # $('.svg_container').onchange = (evt) -> $.ajax.get(this.attr('src'))
-        
+                
         # a queue to ensure that user commands happen in some kind of sane 
         # sequence (actually, it's an empty element)
         @actions = $({})
+        
+        # A unique. incrementing number to help minimize irritating browser
+        # caching of includes
+        @unique_number = 0
     
     loadIncludes: ->
         p = this
@@ -267,10 +285,12 @@ class Presentation
         $('.include').each (i) ->
             div = $(this)
             div.empty()
-            path = div.attr('src')
-            console.log("Here: #{path}, #{div}")
+            p.unique_number += 1
+            path = div.attr('src') + '?' + p.unique_number
+            console.log('path: ' + path)
             if div
-                d3.xml(path, (xml) -> 
+                $.get(path, (xml) ->
+                #d3.xml(path, (xml) -> 
                     console.log("div: #{div}, xml: #{xml.documentElement}")
                     div.get(0).appendChild(xml.documentElement)
                     p.showCurrent(-> p.resetCurrent())
@@ -367,9 +387,10 @@ class Presentation
             when 37, 33, 38 then @revertQueued()
             # right arrow, page down, down arrow
             when 39, 34, 30 then @advanceQueued()
-            when 84, 67 then @toggleTOC()  # c
+            when 84, 67 then @toggleControls() # c
             when 82 then @resetCurrent()   # r
-            when 80 then @toggleControls() # p
+            when 84 then @toggleTOC() # t
+            when 69 then @toggleEditPickerMode()# e
     
     initControls: ->
         # copy "this" into a variable for the sake of the closure
@@ -414,8 +435,12 @@ class Presentation
         $('#notification_popup').notify()
         
         save_btn = $('#save_button').button()
-        cancel_btn = $('#cancel_button').button()
+        save_btn.click ->
+            p.saveInplaceEdit(-> p.reloadAfterEdit())
         
+        cancel_btn = $('#cancel_button').button()
+        cancel_btn.click ->
+            p.editPickerMode(false, false, false)
        
     toggleControls: ->
         $('#presentation_controls').toggle()
@@ -430,6 +455,9 @@ class Presentation
     
     inplaceEditPickerMode: (enabled) ->
         @editPickerMode(enabled, false)
+     
+    toggleEditPickerMode: ->
+        @editPickerMode((not @edit_picker_enabled))
         
     editPickerMode: (@edit_picker_enabled, external, save=true) ->
         p = this
@@ -466,6 +494,8 @@ class Presentation
 
     reloadAfterEdit: ->    
         
+        @edit_picker_enabled = false
+        
         $('.include').removeClass('svg_editor')
         
         # remove the clicking behavior on the include
@@ -477,6 +507,8 @@ class Presentation
         # undef the svg_canvas, if needed
         @setEditorSVGCanvas(undefined)
         @currently_editted_path = undefined
+        
+        $('#svg_editor_controls').hide()
 
 
     setEditorSVGCanvas: (@svg_canvas) ->
@@ -514,6 +546,9 @@ class Presentation
         # show the svg editor controls
         $('#svg_editor_controls').fadeIn()
         
+        # turn off the presentation controls
+        $('#presentation_controls').hide()
+        
         
     saveInplaceEdit: (cb) ->
         @transientMessage('Saving...')
@@ -537,9 +572,8 @@ class Presentation
                 timeout: 1000
                 url: 'save/' + p.currently_editted_path
                 data: { data: svg_str }
-                success: -> p.transientMessage('Success!')
+                success: -> p.transientMessage('File saved.'); cb()
                 error: (XHR,stat,msg)-> alert('Unable to save SVG: ' + msg)
-                complete: cb
                 )
         )
 
