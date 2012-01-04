@@ -18,7 +18,7 @@ Basically, Showboat consists of three parts:
 
 As part of #3, there is something that has the flavor of a modest a little domain specific language, whereby "builds" of slide components (e.g. fade-in, fade-out, appear, etc., analogous to the builds and actions in Keynote) can be specified in a relatively minimalist way
 
-The basic idea is that one can write a simple, clean skeleton in jade:
+The basic idea is that one can write a simple, clean skeleton in Jade:
 
     .slide
         img#d1(src="diagram1.png")
@@ -42,11 +42,13 @@ Also, simple slidy-style bullety things like:
             li ... and some more bullets
             li ... and some more
 
-also are possible.  Where [Showoff](http://github.com/schacon/showoff)
+also are possible.  Where [Showoff](http://github.com/schacon/showoff) makes markup even leaner using markdown, in Showboat, the additional level of control offered by CSS classes and ids was worth the extra few characters.  Adding animations / builds etc. to Showoff, for instance, probably would require additional ad hoc syntax on top of what has already been added to support slides (e.g. `!SLIDE` etc.).  By using Jade, Showboat gives you full control to specify anything that can be done in HTML5, which is basically just about anything you'd ever want to do.
 
 ## SVG Support, In-line editing
 
-After wrestling around with HTML/CSS for a while, I discovered that I sometimes really have to have complete control over *exactly* where elements appear on the screen.  HTML was designed for displaying long flowing page layouts, and while it is possible to exert exact x/y control, this is a job better suited to the SVG format.  Showoff supports inclusion and "building" of SVG content, and it also allows for in-line, in browser SVG editing, via the excellent [svg-edit project](http://code.google.com/p/svg-edit/).  Document saving is supported by the `showboat serve` command, which provides the client-side scripts with a lifeline to your local filesystem via a locally running server.
+After wrestling around with HTML/CSS for a while, I discovered that I sometimes really have to have complete control over *exactly* where elements appear on the screen.  Slide presentations are fundamentally visual things, so getting things *just right* is sometimes more involved than letting stuff flow on a page.
+
+HTML was designed for displaying long flowing page layouts, and while it is possible to exert exact x/y control, this is a job better suited to the SVG format.  Showboat supports inclusion and "building" of SVG content, and it also allows for in-line, in browser SVG editing, via the excellent [svg-edit project](http://code.google.com/p/svg-edit/).  Document saving is supported by the `showboat serve` command, which provides the client-side scripts with a lifeline to your local filesystem via a locally running server.
 
 ## Usage
 
