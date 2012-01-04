@@ -1,19 +1,22 @@
-# Showboat
-## A workflow for making full-featured slide presentations in HTML5/svg/flash/sky's-the-limit
+# Showboat: a tool for hackers who want complete control over their slide presentations
 
-Showboat is an experimental project I've started out of frustration with existing tools for making slide presentations.  Many such tools exist, but over the years none has really felt right, or let me do what I want to do.  In particular, my presentations usually include lots of video, animation, and progressively revealed figures (and not a lot of text or bullets).  Over the years, I've gone from Powerpoint, to creating entire presentations in Flash, to Apple's Keynote.  While Keynote was once great and used to serve me reasonably well, the software has been getting worse and worse over the years.  First, they quietly disabled Flash support (via an unrelated 10.6 OS update... right before I was scheduled to give a talk which included tons of embedded Flash... ugh).  Then, they made the keynote bundle an opaque binary monstrosity.  Then they farked up the handling of imported images such that every cut-and-pasted image was stored internally as uncompressed TIFF content, making my presentations weigh in at over a GB (and with a "reduce file size option" that doesn't actually work).
+## Why?
 
-At some point, my frustration boiled over, and tools like *Showoff*, *slidy*, and *S5* came to my attention.  Doing presentation in a web browser seems like a terribly sensible thing to do.  *slidy* and *S5* basically provide some js and css, and have you write HTML, while *Showoff* uses markdown + a little bit of extra syntax.  While these tools are really cool, they mostly are aimed at the headers-and-bullets crowd (or at least, in the case of *Showoff*, the crowd whose presentations are dominated by code examples), and didn't really do what I needed to: lots of dynamic diagrams and figures and data.  So I started building my own tool.  I'm calling it "Showboat", in homage to *Showoff*.  I should note that I am stealing/borrowing ideas liberally from both *slidy* and *Showoff*, so props all around.
+Showboat is an experimental project I've started out of frustration with existing tools for making slide presentations.  Many tools already exist in this space, but over the years none has really felt right, or fully let me do what I want to do.  In particular, the presentations I give (I'm an academic scientist) tend to include lots of video, animation, and progressively revealed figures... and not a lot of text or bullet points.
+
+Over the years, I've gone from Powerpoint, to creating entire presentations in Flash, to Apple's Keynote.  While Keynote was once great and used to serve me reasonably well, the software has been getting worse and worse over the years.  First, they quietly disabled Flash support (via an unrelated 10.6 OS update... right before I was scheduled to give a talk which included tons of embedded Flash... ugh).  Then, they made the keynote bundle an opaque binary monstrosity.  Then they screwed up the handling of imported images such that every cut-and-pasted image was stored internally as uncompressed TIFF content, making my presentations weigh in at over a GB (and with a "reduce file size option" that doesn't actually work).  It's really astounding to me how out of control Keynote has gotten.
+
+At some point, my frustration boiled over, and tools like [Showoff](http://github.com/schacon/showoff), [slidy](http://www.w3.org/Talks/Tools/Slidy2/), and [S5](http://meyerweb.com/eric/tools/s5/) came to my attention.  Doing presentation in a web browser seems like a terribly sensible thing to do.  slidy and S5 basically provide some js and css, and have you write HTML, while Showoff uses markdown + a little bit of extra syntax.  While these tools are really cool and inspiring, they seem mostly aimed at the "headers-and-bullets" crowd (or at least, in the case of Showoff, the crowd whose presentations are dominated by code examples), and didn't really do what I needed to: lots of dynamic diagrams and figures and data.  So I started building my own tool.  I'm calling it "Showboat", in homage to Showoff.  I should note that I am stealing/borrowing ideas/code/etc. liberally from both slidy and Showoff, so props all around.
 
 ## What is it?
 
 Basically, Showboat consists of three parts:
 
-1. a python script for starting, compiling, and launching presentations
-2. a client-side script (written in Coffeescript) for handling runtime presentation logic
-3. a presentation markup structure, using the *Jade* templating language, which removes the need to write a lot of needlessly dense HTML.
+1. Python scripts for starting, compiling, launching and serving presentations from the command line
+2. a client-side script (written in Coffeescript) for handling runtime presentation logic.  Basic support for inline editing of SVGs is also supported (see below)
+3. A set of presentation markup conventions, using the [Jade](http://jade-lang.com/) template language
 
-Between 2 & 3, there is built a modest little DSL-ish thingy, whereby "builds" of slide components (e.g. fade-in, fade-out, appear, etc., analogous to the builds and actions in Keynote) can be specified.
+As part of #3, there is something that has the flavor of a modest a little domain specific language, whereby "builds" of slide components (e.g. fade-in, fade-out, appear, etc., analogous to the builds and actions in Keynote) can be specified in a relatively minimalist way
 
 The basic idea is that one can write a simple, clean skeleton in jade:
 
@@ -26,7 +29,7 @@ The basic idea is that one can write a simple, clean skeleton in jade:
             | fade_out(#d1)
             | fade_in(#d2)
 
-The above example starts as a blank screen, and then on user key presses shows the first diagram, then the second, while fading out the first.  It is also easy to import SVG content, with labeled elements and build-in or out those elements.  The hope is to construct all of the infrastructure to do all of the non-tacky builds in Keynote (most of which are, IMHO, *very* tacky).
+The above example starts as a blank screen, and then on user key presses shows the first diagram, then the second, while fading out the first.  It is also easy to import SVG content, with labeled elements and build-in or out those elements.  The hope is to construct all of the infrastructure to do all of the non-tacky builds in Keynote.
 
 Also, simple slidy-style bullety things like:
     
@@ -39,22 +42,63 @@ Also, simple slidy-style bullety things like:
             li ... and some more bullets
             li ... and some more
 
-also are possible.
+also are possible.  Where [Showoff](http://github.com/schacon/showoff)
+
+## SVG Support, In-line editing
+
+After wrestling around with HTML/CSS for a while, I discovered that I sometimes really have to have complete control over *exactly* where elements appear on the screen.  HTML was designed for displaying long flowing page layouts, and while it is possible to exert exact x/y control, this is a job better suited to the SVG format.  Showoff supports inclusion and "building" of SVG content, and it also allows for in-line, in browser SVG editing, via the excellent [svg-edit project](http://code.google.com/p/svg-edit/).  Document saving is supported by the `showboat serve` command, which provides the client-side scripts with a lifeline to your local filesystem via a locally running server.
 
 ## Usage
 
-  showboat start my_slideshow  # start a new presentation in my_slideshow
-  showboat {compile | view | present} my_slideshow
+    showboat start my_slideshow  # start a new presentation in my_slideshow
+    cd my_slideshow
+    showboat compile # compile the files and put them into output/
+    showboat view  # open a browser and view
+    showboat present # open the presentation in an alternate, fullscreen browser
+    showboat serve # launch a local server to serve the presentation
+    
+## Helpers
+
+Showboat looks for a json-formatted file called `.showboat` to define shell commands for all of the external actions that need to be performed outside of the browser.  This includes things like browser launch commands, external editors, webservers, etc.  The hope is that users can customize these helpers however they like to make the workflow as smooth as possible.
+
+e.g.:
+
+```
+{
+    "assets_path": "~/Documents/talks/assets",
+    
+    "thumbnail_cmd": "webkit2png --width=${width} --height=${height} --dir=${dst_path} -T --delay=0.5 -o slide_${slide_number} ${slide_url}",
+    "html_compile_cmd": "jade ${dst_path}",
+    "script_compile_cmd": "coffee -c ${script_path}",
+    "styles_compile_cmd": "",
+    "sync_cmd": "rsync -a ${src_path} ${dst_path}",
+    "view_url_cmd": "open \"${url}\" ",
+    "alt_view_url_cmd": "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --allow-file-access-from-files \"${url}\"",
+    "present_url_cmd": "open -a Plainview \"${url}\" ",
+    "http_server_cmd": "showboat_server --host=${host} --port=${port} ${root_path}",
+    "edit_svg_cmd": "open -a iDraw ${containing_path}/${file_name_noext}.idraw"
+}
+```
 
 ## Where is it going?
 
-I'm *really* excited about using this a platform to bring in fancy data visualization into my talks, via the amazing d3.js project.  
+I'm *really* excited about using this a platform to bring in elegant data visualization into my talks, via the amazing d3.js project.  
 
-There's a lot of interesting audience-interaction potential as well; this seems to be what @schacon is most interested in with *Showoff*, though, being a scientist and not a web person, it is much less common to be giving a talk to audience where everyone has their laptops out.  I may have to start teaching soon, however, so I am interested in the possibilities for student interaction with a live presentation.  Making a talk be a web-thingy really opens up an almost limitless canvas of possibility.
+There's also a lot of interesting audience-interaction potential; this seems to be what @schacon is most interested in with *[Showoff](http://github.com/schacon/showoff)*, though, being a scientist and not a web person, it is much less common for me to be giving a talk to an audience in which everyone has their laptop out.  (I may have to start teaching soon, however, so I am interested in the possibilities for student interaction with a live presentation).  Nonetheless, making a talk be a web-thingy really opens up an almost limitless canvas of possibility.
+
+## Wishlist
+
+Here are some features that I'm interested in adding:
+
+* add in some proper themes so that the non-SVG slides look reasonable
+* upload to Dropbox / upload to Github support
+* add in the cool typewriter code animation stuff from Showoff
+* ability to add/rearrange slides from within the browser
+* ... any many more...
 
 ## Disclaimer
 
-I'm still putting this together, so don't expect any of this to be ready yet.  I'm writing this readme on the off-hand chance that someone stumbles across this on the web.
+I'm still putting this together, so don't expect any of this to be ready yet.  I'm writing this read-me on the off-hand chance that someone stumbles across this on the web.
 
 Also, please note, I'm not someone who lives and breaths web technologies (at least, not for many years), so this is my first foray back into some of these web technologies.  I'm muddling along a bit in Coffeescript and CSS, so if you're interested in this project and have any suggestions or want to help, please drop me a line at davidcox@me.com.
 
