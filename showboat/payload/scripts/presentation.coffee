@@ -387,7 +387,7 @@ class Presentation
             when 37, 33, 38 then @revertQueued()
             # right arrow, page down, down arrow
             when 39, 34, 30 then @advanceQueued()
-            when 84, 67 then @toggleControls() # c
+            when 67 then @toggleControls() # c
             when 82 then @resetCurrent()   # r
             when 84 then @toggleTOC() # t
             when 69 then @toggleEditPickerMode()# e

@@ -42,7 +42,13 @@ def compile(src_path, out_path, copy_assets=False, overwrite_output=True,
     # compile the coffeescript
     coffeescript_compile(out_path)
     
-    assets_path = os.path.abspath(os.path.expanduser(config['assets_path']))
+    local_assets_path = os.path.join(src_path, 'assets')
+    local_assets_path = os.path.abspath(os.path.expanduser(local_assets_path))
+    
+    if os.path.exists(local_assets_path):
+        assets_path = local_assets_path
+    else:
+        assets_path = os.path.abspath(os.path.expanduser(config['assets_path']))
     
     # symlink or copy in the global assets, if they exist
     if os.path.exists(assets_path):

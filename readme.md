@@ -101,6 +101,7 @@ There's also a lot of interesting audience-interaction potential; this seems to 
 Here are some features that I'm interested in adding:
 
 * add in some proper themes so that the non-SVG slides look reasonable
+* slide preloading, esp. when working over the internet
 * upload to Dropbox / upload to Github support
 * add in the cool typewriter code animation stuff from Showoff
 * ability to add/rearrange slides from within the browser
