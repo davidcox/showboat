@@ -4,42 +4,6 @@ n_slides_global = 0
 # Slides and Builds
 # -----------------------------------------------------------------------
 
-recursiveDoBuilds = (builds, cb) ->
-    builds = builds.slice(0)
-    if builds.length is 0
-        cb() if cb
-        return
-    b = builds.shift()
-    b.do(-> recursiveDoBuilds(builds, cb))
-
-recursiveUndoBuilds = (builds, cb, n=undefined) ->
-    if n is undefined
-        n = builds.length
-    
-    alert(n)
-        
-    if n == 0
-        cb() if cb
-        return
-    b = builds[n-1]
-    n_prime = n-1
-    b.undo(-> arguments.callee(builds, cb, n_prime))
-
-
-# Hack to convince Webkit to actually, you know, display stuff...
-refreshVisibility = (parent) ->
-    includes = $('.include', parent)
-    includes.each ->
-        local_parent = $(this)
-        $('svg', local_parent).each -> 
-            svg = $(this).remove()
-            local_parent.append(svg)
-            #parent.append(removed)
-    
-    # $('svg', parent).each ->
-    #     if op = $(this).css('opacity')
-    #         $(this).css('opacity', op)
-
 # a dictionary of object for executing builds
 # should be able to add new ones at any point
 build_types =
@@ -54,29 +18,11 @@ build_types =
     fade_in: (target, duration='slow') ->
         do: (cb) -> $(target).animate({'opacity': 1.0}, duration, cb)
         undo: (cb) -> $(target).animate({'opacity': 0.0}, 0, cb)
-    # fade_in: (target, duration=500) ->
-    #     do: -> d3.select(target).style('display', 'yes')
-    #                             .transition()
-    #                             .duration(duration)
-    #                             .style('opacity', 1.0)
-    #     undo: -> d3.select(target).style('display', 'yes')
-    #                               .style('opacity', 0.0)
-                                  
-
     
     fade_out: (target, duration='slow') ->
         do: (cb) -> $(target).animate({'opacity': 0.0}, duration, cb)
         undo: (cb) -> $(target).animate({'opacity': 1.0}, 0, cb)
-        
-    # fade_out: (target, duration=500) ->
-    #     do: -> d3.select(target).style('display', 'yes')
-    #                             .transition()
-    #                             .duration(duration)
-    #                             .style('opacity', 0.0)
-    #                             
-    #     undo: -> d3.select(target).style('display', 'yes')
-    #                               .style('opacity', 1.0)
-        
+    
     opacity: (target, op, duration='slow') ->
         @last_opacity
         do: (cb) ->
@@ -109,8 +55,11 @@ build_types =
         undo: (cb) -> 
             b.undo() for b in subbuilds
             cb() if cb
+            
+    # ... many more to come ...
 
-# a slide object
+
+# An object to encapsulate the bookkeeping of each slide
 class Slide
     @build_list
     @current_build
@@ -220,8 +169,18 @@ class Slide
         $(@slide_div).show(0, cb)
         
         # I'm not sure why this is needed...
-        refreshVisibility(@slide_div)
-        
+        @refreshVisibility(@slide_div)
+    
+    # Hack to convince Webkit to actually, you know, display stuff...
+    refreshVisibility: (parent) ->
+        includes = $('.include', parent)
+        includes.each ->
+            local_parent = $(this)
+            $('svg', local_parent).each -> 
+                svg = $(this).remove()
+                local_parent.append(svg)
+
+    
     hide: ->
         $(@slide_div).hide()
 
@@ -229,7 +188,6 @@ class Slide
 # Presentation Logic
 # -----------------------------------------------------------------------
   
-# Main presentation object
 class Presentation
     
     # a list of slide objects
@@ -631,9 +589,6 @@ class Presentation
     toggleTOC: ->
         $('#toc').fadeToggle()
         
-    # TODO: handle URL bar stuff
-    # see: set_location / check_location in slidy
-    
     checkURLBarLocation: ->
         if (result = window.location.hash.match(/#([0-9]+)/))
             slide_number = result[result.length - 1] - 1

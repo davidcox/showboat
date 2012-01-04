@@ -51,7 +51,7 @@ div#toc {
   top: 0;
   bottom: 0;
   left: 0;
-  width: 10%;
+  width: 20%;
   height: 100%;
   padding: 5;
   background: rgba(0,0,0, 0.8);
@@ -60,6 +60,7 @@ div#toc {
   z-index: 300;
   overflow: auto;
   display: none;
+  font-size: 80%;
 }
 
 div#toc li {
