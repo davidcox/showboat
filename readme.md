@@ -56,7 +56,15 @@ After wrestling around with HTML/CSS for a while, I discovered that I sometimes 
     showboat view  # open a browser and view
     showboat present # open the presentation in an alternate, fullscreen browser
     showboat serve # launch a local server to serve the presentation
-    
+
+## Key shortcuts (within presentation)
+
+* arrows: navigate slides
+* t: display table of contents / slide sorter
+* c: show slide control palette
+* e: enter in-line edit mode (to edit SVGs in-line)
+* r: reset slide builds
+
 ## Helpers
 
 Showboat looks for a json-formatted file called `.showboat` to define shell commands for all of the external actions that need to be performed outside of the browser.  This includes things like browser launch commands, external editors, webservers, etc.  The hope is that users can customize these helpers however they like to make the workflow as smooth as possible.
