@@ -18,7 +18,7 @@ Basically, Showboat consists of three parts:
 
 As part of #3, there is something that has the flavor of a modest a little domain specific language, whereby "builds" of slide components (e.g. fade-in, fade-out, appear, etc., analogous to the builds and actions in Keynote) can be specified in a relatively minimalist way
 
-The basic idea is that one can write a simple, clean skeleton in Jade:
+The basic idea is that one can write a simple, clean skeleton in Jade and achieve relatively complex behavior:
 
     .slide
         img#d1(src="diagram1.png")
@@ -29,7 +29,7 @@ The basic idea is that one can write a simple, clean skeleton in Jade:
             | fade_out(#d1)
             | fade_in(#d2)
 
-The above example starts as a blank screen, and then on user key presses shows the first diagram, then the second, while fading out the first.  It is also easy to import SVG content, with labeled elements and build-in or out those elements.  The hope is to construct all of the infrastructure to do all of the non-tacky builds in Keynote.
+The above example starts as a blank screen, and then on user key presses shows the first diagram, then the second, while fading out the first.  It is also easy to import SVG content, with labeled elements and build-in or -out those elements.  The hope is to construct all of the infrastructure to do all of the builds in Keynote (or at least, the non-tacky ones).
 
 Also, simple slidy-style bullety things like:
     
@@ -61,17 +61,17 @@ HTML was designed for displaying long flowing page layouts, and while it is poss
 
 ## Key shortcuts (within presentation)
 
-* arrows: navigate slides
-* t: display table of contents / slide sorter
-* c: show slide control palette
-* e: enter in-line edit mode (to edit SVGs in-line)
-* r: reset slide builds
+* **arrows**: navigate slides
+* **t**: display table of contents / slide sorter
+* **c**: show slide control palette
+* **e**: enter in-line edit mode (to edit SVGs in-line)
+* **r**: reset slide builds
 
 ## Helpers
 
-Showboat looks for a json-formatted file called `.showboat` to define shell commands for all of the external actions that need to be performed outside of the browser.  This includes things like browser launch commands, external editors, webservers, etc.  The hope is that users can customize these helpers however they like to make the workflow as smooth as possible.
+Showboat looks for a json-formatted file called `.showboat` in `~/` to define shell commands for all of the external actions that need to be performed outside of the browser.  This includes things like browser launch commands, external editors, webservers, etc.  The hope is that users can customize these helpers however they like to make the workflow as smooth as possible.
 
-e.g.:
+Here's an example of the one I'm using currently:
 
 ```
 {
@@ -92,7 +92,7 @@ e.g.:
 
 ## Where is it going?
 
-I'm *really* excited about using this a platform to bring in elegant data visualization into my talks, via the amazing d3.js project.  
+I'm *really* excited about using this a platform to bring elegant data visualization into my talks, via the amazing [d3.js](http://mbostock.github.com/d3/) project.  I used to have much more data-interactivity in my talks back when I was slaving away making slides in Flash, but I think that d3 represents a quantum leap forward in interactive data visualization possibilities.
 
 There's also a lot of interesting audience-interaction potential; this seems to be what @schacon is most interested in with *[Showoff](http://github.com/schacon/showoff)*, though, being a scientist and not a web person, it is much less common for me to be giving a talk to an audience in which everyone has their laptop out.  (I may have to start teaching soon, however, so I am interested in the possibilities for student interaction with a live presentation).  Nonetheless, making a talk be a web-thingy really opens up an almost limitless canvas of possibility.
 
