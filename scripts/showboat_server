@@ -4,12 +4,15 @@ import bottle
 from showboat.util import launch_external_svg_editor, save_svg_file
 from mako.template import Template
 import argparse
+import os
 
 
 # parse commandline args
 parser = argparse.ArgumentParser(description='Serve a showboat presentation')
-parser.add_argument('src_path', default='.',
-                    help='the project path')
+parser.add_argument('--src_path', default='<undefined>',
+                    help='the path to the project source')
+parser.add_argument('root_path', default='.',
+                    help='the path to the rendered site')
 parser.add_argument('--host', default='localhost')
 parser.add_argument('--port', default=8080, type=int)
 
@@ -20,21 +23,25 @@ app = bottle.Bottle()
 # TODO: routes for launching editing applications on the "server"-side
 # wouldn't it be neat if there were an "edit" option that could locally launch 
 # whatever external editor I like?
-@app.route('/edit/svg/<file_path:path>')
+@app.route('/edit/<file_path:path>.svg')
 def edit(file_path):
-    launch_external_svg_editor(file_path)
+    local_path = os.path.join(args.root_path,file_path + '.svg')
+    local_path = os.path.abspath(os.path.expanduser(local_path))
+    launch_external_svg_editor(local_path)
 
-@app.post('/save/svg/<path:path>')
+@app.post('/save/<path:path>.svg')
 def save(path):
     data = bottle.request.forms.data
-    save_svg_file(path, data)
+    local_path = os.path.join(args.root_path, path + '.svg')
+    local_path = os.path.abspath(os.path.expanduser(local_path))
+    save_svg_file(local_path, data)
 
-    print("Saved to {%s}" % path)
+    print("Saved to {%s}" % local_path)
     return "OK"
 
 @app.route('/<path:path>')
 def static_route(path):
-    return bottle.static_file(path, args.src_path)
+    return bottle.static_file(path, args.root_path)
     
 
 

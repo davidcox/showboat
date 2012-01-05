@@ -7,45 +7,45 @@ n_slides_global = 0
 # a dictionary of object for executing builds
 # should be able to add new ones at any point
 build_types =
-    appear: (target) ->
-        do: (cb) -> $(target).show(0, cb)
-        undo: (cb) -> $(target).hide(0, cb)
+    appear: (slide, target) ->
+        do: (cb) -> $(target, slide).css('opacity', 1.0); cb() if cb
+        undo: (cb) -> $(target, slide).css('opacity', 0.0); cb() if cb
     
-    disappear: (target) ->
-        do: (cb) -> $(target).hide(0, cb)
-        undo: (cb) -> $(target).show(0, cb)
+    disappear: (slide, target) ->
+        do: (cb) -> $(target, slide).css('opacity', 0.0); cb() if cb
+        undo: (cb) -> $(target, slide).css('opacity', 1.0); cb() if cb
     
-    fade_in: (target, duration='slow') ->
-        do: (cb) -> $(target).animate({'opacity': 1.0}, duration, cb)
-        undo: (cb) -> $(target).animate({'opacity': 0.0}, 0, cb)
-    
-    fade_out: (target, duration='slow') ->
+    fade_in: (slide, target, duration='slow') ->
+        do: (cb) -> $(target, slide).animate({'opacity': 1.0}, duration, cb)
+        undo: (cb) -> $(target, slide).animate({'opacity': 0.0}, 0, cb)
+        
+    fade_out: (slide, target, duration='slow') ->
         do: (cb) -> $(target).animate({'opacity': 0.0}, duration, cb)
         undo: (cb) -> $(target).animate({'opacity': 1.0}, 0, cb)
     
-    opacity: (target, op, duration='slow') ->
+    opacity: (slide, target, op, duration='slow') ->
         @last_opacity
         do: (cb) ->
-            @last_opacity = $(target).css('opacity')
+            @last_opacity = $(target, slide).css('opacity')
             lo = @last_opacity
-            $(target).animate({'opacity': op}, duration, cb)
+            $(target, slide).animate({'opacity': op}, duration, cb)
         undo: (cb) ->
             # restore a previously stored opacity, if one is available 
             if @last_opacity != undefined
                 lo = @last_opacity
-                $(target).animate({'opacity': lo}, 0, cb)
+                $(target, slide).animate({'opacity': lo}, 0, cb)
             else
                 # if last_opacity is undefined, check if one is specified
-                if $(target).css('opacity')
-                    @last_opacity = $(target).css('opacity')
+                if $(target, slide).css('opacity')
+                    @last_opacity = $(target, slide).css('opacity')
                 cb() if cb
     
-    play: (target) ->
+    play: (slide, target) ->
         do: (cb) -> 
-            try $(target).get(0).play()
+            try $(slide, target).get(0).play()
             cb() if cb
         undo: (cb) -> 
-            try $(target).get(0).pause().rewind()
+            try $(slide, target).get(0).pause().rewind()
             cb() if cb
 
     composite: (subbuilds) ->
@@ -108,7 +108,7 @@ class Slide
                     if $(target) is null
                         alert("Invalid target #{target} in build #{subbstr}")
 
-                    subbuilds.push(build_types[type](target, args...))
+                    subbuilds.push(build_types[type](@slide_div, target, args...))
                 
                 if subbuilds.length == 0
                     alert('blah!!')
@@ -202,6 +202,11 @@ class Presentation
         @slides = []
         @current_slide_idx = 0
         
+        
+        # A unique. incrementing number to help minimize irritating browser
+        # caching of includes
+        @unique_number = 0
+        
         # preprocess the DOM
         @loadIncludes()
         
@@ -220,6 +225,7 @@ class Presentation
         
         # bind appropriate handlers
         document.onkeydown = (evt) => @keyDown(evt)
+        document.onkeyup = (evt) => @keyUp(evt)
         
         # build the table of contents
         @buildTOC()
@@ -227,14 +233,11 @@ class Presentation
         # setup up a recurring check to sync the browser location field with
         # the slideshow
         @checkURLBarPeriodically(100)
-                
+        
         # a queue to ensure that user commands happen in some kind of sane 
         # sequence (actually, it's an empty element)
         @actions = $({})
         
-        # A unique. incrementing number to help minimize irritating browser
-        # caching of includes
-        @unique_number = 0
     
     loadIncludes: ->
         p = this
@@ -247,12 +250,15 @@ class Presentation
             path = div.attr('src') + '?' + p.unique_number
             console.log('path: ' + path)
             if div
-                $.get(path, (xml) ->
-                #d3.xml(path, (xml) -> 
-                    console.log("div: #{div}, xml: #{xml.documentElement}")
-                    div.get(0).appendChild(xml.documentElement)
-                    p.showCurrent(-> p.resetCurrent())
-                    )
+                $.ajax(
+                    url: path
+                    success: (xml) ->
+                        div.get(0).appendChild(xml.documentElement)
+                        p.showCurrent(-> p.resetCurrent())
+                    error: (err) ->
+                        div.append($("<p>An error occurred loading #{path}</p>"))
+                )
+                #$.get(path, success, error)
         
         
         $('g').each (i) ->
@@ -290,7 +296,19 @@ class Presentation
         a = @actions
         a.queue('user_interaction', -> p.revert() )
         a.dequeue('user_interaction')
-        
+    
+    advanceSlideQueued: ->
+        p = this
+        a = @actions
+        a.queue('user_interaction', -> p.advanceSlide() )
+        a.dequeue('user_interaction')
+
+    revertSlideQueued: ->
+        p = this
+        a = @actions
+        a.queue('user_interaction', -> p.revertSlide() )
+        a.dequeue('user_interaction')
+    
     # move to next slide
     advanceSlide: ->
         @current_slide_idx += 1
@@ -327,24 +345,29 @@ class Presentation
     revertBuild: ->
         @slides[@current_slide_idx].undoPreviousBuild()
 
+        
+    keyUp: (evt) ->
+        key = evt.keyCode
+        if key is 16 then @shiftKeyActive = false
+
     keyDown: (evt) ->
         key = evt.keyCode
         if key >= 48 and key <= 57 # 0-9
             alert('number key!')
-            
+        
         switch key
             # shift
             when 16 then @shiftKeyActive = true
             # space
             when 32 
-                if @shiftKeyActive 
-                    @advance() 
-                else 
-                    @revert()
+                @advance() 
+                
             # left arrow, page up, up arrow
-            when 37, 33, 38 then @revertQueued()
+            when 37, 33, 38
+                if @shiftKeyActive then @revertSlideQueued() else @revertQueued()
             # right arrow, page down, down arrow
-            when 39, 34, 30 then @advanceQueued()
+            when 39, 34, 30
+                if @shiftKeyActive then @advanceSlideQueued() else @advanceQueued()
             when 67 then @toggleControls() # c
             when 82 then @resetCurrent()   # r
             when 84 then @toggleTOC() # t

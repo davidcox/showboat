@@ -75,8 +75,11 @@ def count_n_slides(out_path):
         return n
 
 @contextmanager
-def serve_http(root_path, host='localhost', port=8080, timeout=5.0):
+def serve_http(root_path='.', host='localhost', port=8080, timeout=5.0,
+               src_path='<undefined>'):
+               
     cmd = Template(config['http_server_cmd']).render(root_path=root_path,
+                                                     src_path=src_path,
                                                      host=host,
                                                      port=port)
     proc = subprocess.Popen(shlex.split(str(cmd)))
@@ -148,7 +151,7 @@ def present_url(url):
     syscall(cmd)
 
 def launch_external_svg_editor(path):
-    file_path = os.path.join(config['assets_path'], 'svg', path)
+    file_path = os.path.join(config['assets_path'], path)
     file_path = os.path.abspath(os.path.expanduser(file_path))
     
     split_path = os.path.split(file_path)
@@ -168,7 +171,7 @@ def launch_external_svg_editor(path):
 
 def save_svg_file(path, contents, viewbox_hack=True):
     
-    file_path = os.path.join(config['assets_path'], 'svg', path)
+    file_path = os.path.join(config['assets_path'], path)
     file_path = os.path.abspath(os.path.expanduser(file_path))
     
     if viewbox_hack:

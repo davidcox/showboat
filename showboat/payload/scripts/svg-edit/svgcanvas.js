@@ -5606,7 +5606,8 @@ var convertToGroup = this.convertToGroup = function(elem) {
 		var vb = elem.getAttribute('viewBox');
 		
 		if(vb) {
-			var nums = vb.split(' ');
+			//var nums = vb.split(' ');
+			var nums = svg.ToNumberArray(vb)
 			pos.x -= +nums[0];
 			pos.y -= +nums[1];
 		}
@@ -5796,6 +5797,10 @@ this.setSvgString = function(xmlString) {
 		// determine proper size
 		if (content.attr("viewBox")) {
 			var vb = content.attr("viewBox").split(' ');
+			// DDC patched to properly handle SVG spec
+			for(i in vb){
+			    vb[i] = vb[i].replace(/,/g,'')
+			}
 			attrs.width = vb[2];
 			attrs.height = vb[3];
 		}

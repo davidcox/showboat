@@ -58,9 +58,9 @@ HTML was designed for displaying long flowing page layouts, and while it is poss
 
 Showboat needs the following external parts to work:
 
-* [Jade](http://jade-lang.org): for minimal markup
-* [Coffeescript](http://coffeescript.org): for the main script (I found this much preferable to "raw" javascript)
-* [webkit2png](http://www.paulhammond.org/webkit2png/): for making thumbnails (optional)
+* [Jade](http://jade-lang.com): for minimal markup
+* [Coffeescript](http://coffeescript.org): for the main script (I found this much preferable to raw javascript)
+* [webkit2png](http://www.paulhammond.org/webkit2png/): for making thumbnails (optional; probably other ways to get this done on other platforms)
 
 All of the above are `brew install`-able on Mac, though using a different tool (e.g. for making the thumbnails) is just a matter of changing the helper command (see *Helpers*, below).
 

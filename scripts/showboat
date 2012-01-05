@@ -57,10 +57,11 @@ else:
     elif args.command == 'serve':
         
         src_path = args.src_path
+        root_path = args.out_path
         if not os.path.exists(os.path.join(src_path, 'index.html')):
             src_path = os.path.join(src_path, 'output')
     
-        with serve_http(src_path):
+        with serve_http(root_path=root_path, src_path=src_path):
             print(("HTTP Server launched on http://localhost:8080.html. " +
                   "Press Ctl-C to quit."))
 
