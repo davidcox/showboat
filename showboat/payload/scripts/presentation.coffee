@@ -75,7 +75,8 @@ class Slide
                         
         # Parse and add the builds
         bl = @build_list
-        $('.build, .incremental ul li, .incremental > *:not(ul)', @slide_div).each (i) ->
+        $('.build, .incremental ul li, .incremental > *:not(ul)', 
+          @slide_div).each (i) ->
             b = $(this)
             
             # if it's a build directive, parse it appropriately
@@ -168,6 +169,9 @@ class Slide
             @first_show = false
         $(@slide_div).show(0, cb)
         
+        # try to scale all of the images to be sensible
+        # $(@slide_div).imagefit()
+
         # I'm not sure why this is needed...
         @refreshVisibility(@slide_div)
     
@@ -206,8 +210,8 @@ class Presentation
         # A unique. incrementing number to help minimize irritating browser
         # caching of includes
         @unique_number = 0
-        
-        # preprocess the DOM
+                
+        # load DOM pseudo-includes
         @loadIncludes()
         
         # load the slides
@@ -440,11 +444,20 @@ class Presentation
     toggleEditPickerMode: ->
         @editPickerMode((not @edit_picker_enabled))
         
-    editPickerMode: (@edit_picker_enabled, external, save=true) ->
+    # DDC: TODO: refactor all of this picker business to be cleaner
+    editPickerMode: (@edit_picker_enable, external, save=true) ->
         p = this
         current = p.currentSlideDiv()
         
-        if p.edit_picker_enabled
+        if p.edit_picker_enable
+            
+            # if there's only one SVG, just go ahead and start editing
+            
+            if $('.include', current).length == 1
+                p.inplaceEdit($('.include', current).eq(0))
+                return
+            
+            # otherwise, start up the SVG picker mode
             
             @transientMessage('Click on an SVG to edit')
             # use an external editing application, via the showboat_server
