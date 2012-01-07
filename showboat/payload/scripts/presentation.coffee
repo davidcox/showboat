@@ -90,6 +90,9 @@ class Slide
             if b.hasClass('set')
                 set_directive = true
             
+            build_id = 'build_' + (bl.length + 1) + '_' + slide_div.attr('id')
+            b.attr('id', build_id)
+            
             # if it's a build directive, parse it appropriately
             if b.hasClass('build') or set_directive
                 
@@ -146,9 +149,11 @@ class Slide
                 
             # for "ordinary" incremental display
             else
-                bl.push(build_types['appear'](b))
+                bl.push(build_types['appear'](@slide_div, '#' + build_id))
             
-            b.attr('id', 'build_' + bl.length)
+            
+
+        # $('.bullets').textfill({'innerTag':'li'})
 
         # set the slide content to an appropriate initial state
         #build.do() for build in @build_list
@@ -190,7 +195,6 @@ class Slide
             current_build.do()
             @current_build_idx += 1
             
-            console.log(current_build.auto_advance)
             if current_build.auto_advance
                 return @doNextBuild()
             
@@ -251,6 +255,9 @@ class Presentation
         @slides = []
         @current_slide_idx = 0
         
+        base_font_size = parseFloat($('body').css('font-size'))
+        @adjustBaseFontSize(base_font_size)
+        window.onresize = (evt) => @adjustBaseFontSize(base_font_size)
         
         # A unique. incrementing number to help minimize irritating browser
         # caching of includes
@@ -279,7 +286,6 @@ class Presentation
         document.onkeydown = (evt) => @keyDown(evt)
         document.onkeyup = (evt) => @keyUp(evt)
         
-        
         # setup up a recurring check to sync the browser location field with
         # the slideshow
         @checkURLBarPeriodically(100)
@@ -287,6 +293,28 @@ class Presentation
         # a queue to ensure that user commands happen in some kind of sane 
         # sequence (actually, it's an empty element)
         @actions = $({})
+        
+    
+    adjustBaseFontSize: (base_font_size, ref_width=1024, ref_height=768) ->
+        # adjust the base font size according to the window size
+        width = window.innerWidth
+        height = window.innerHeight
+        
+        current_aspect = height / width
+        ref_aspect = ref_height / ref_width
+        console.log(current_aspect)
+        console.log(ref_aspect)
+        console.log(base_font_size)
+        
+        if current_aspect >= ref_aspect
+            # height constrains
+            factor = height / ref_height
+        else
+            factor = width / ref_width
+           
+        new_font_size = factor * base_font_size
+        console.log('Setting new font size: ' + new_font_size) 
+        $('body').css('font-size', new_font_size)
         
     
     loadIncludes: (async=true)->

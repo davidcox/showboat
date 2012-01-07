@@ -7,9 +7,10 @@ body {
   /*width: 1024;
   height: 768;*/
   color: black;
-  background-color: white;
+  background-color: black;
   font-family: "Myriad Pro", "Myriad", sans-serif;
   font-size: 14pt;
+  font-weight:550;
 }
 
 div.slide {
@@ -21,14 +22,13 @@ div.slide {
   bottom: 0;
   left: 0;
   right: 0;
-  /*line-height: 120%;*/
-  background-color: transparent;
-  /*min-width: 600px; 
-  max-width: 1200px; */
   width: 100%;
   height:100%;
-  margin: auto;
-  position: relative;
+  /*line-height: 120%;*/
+  background-color: white;
+  /*min-width: 600px; 
+  max-width: 1200px; */
+  position: absolute;
 /*  display:hidden;*/
 
 }
@@ -192,7 +192,6 @@ svg {
   height: 100%;
 }*/
 
-
 .centered {
   /* basic styling */
   width: 100%;
@@ -213,26 +212,62 @@ svg {
   box-orient: horizontal;
   box-pack: center;
   box-align: center;
+  
+}
+
+.bullets {
+  height: 100%;
+  width: 100%;
 }
 
 /* Headers and text */
 
 .slide h1,h2,h3 { 
-    font-weight: strong; 
+    font-weight: bold; 
     text-align: left; 
-    margin: 0.5em 0; 
+    margin-left: 5%;
+    margin-right: 5%;
+/*    margin: 0.5em 0; */
 }
-.slide h1 { font-size: 4em; }
-.slide h2 { font-size: 3em; }
-.slide h3 { font-size: 2em; }
+.slide h1 { 
+  font-size: 2.8em; 
+  color: #99c;
+  margin-top: 5%;
+}
+.slide h2 { font-size: 2.5em; }
+.slide h3 { font-size: 2.5em; }
 
-.slide li { font-size: 3em; }
+.slide ul {
+  margin-left: 5%;    
+  margin-right: 5%;
+}
+.slide li { 
+  font-size: 2.2em;   
+  font-weight: bold;
+  margin: .3em 0;
+}
 
 .slide pre { 
     margin: 1em 40px; 
     padding: .25em; 
 }
 
+.black {
+  color: #000;
+}
+
+.gray {
+  color: #666;
+}
+
+.red {
+  color: #933;
+}
+
+.right {
+  text-align: right;
+  margin-right: 5%;
+}
 
 /* Pre-defined positions for text and other stuff */
 .text_right{
