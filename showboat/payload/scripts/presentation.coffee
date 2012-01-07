@@ -42,10 +42,12 @@ build_types =
     
     play: (slide, target) ->
         do: (cb) -> 
-            try $(slide, target).get(0).play()
+            try $(target, slide).get(0).play()
             cb() if cb
         undo: (cb) -> 
-            try $(slide, target).get(0).pause().rewind()
+            try 
+                $(target, slide).get(0).pause()
+                $(target, slide).get(0).currentTime = 0
             cb() if cb
 
     composite: (subbuilds) ->
@@ -177,7 +179,7 @@ class Slide
     
     # Hack to convince Webkit to actually, you know, display stuff...
     refreshVisibility: (parent) ->
-        includes = $('.include', parent)
+        includes = $('.svg_include', parent)
         includes.each ->
             local_parent = $(this)
             $('svg', local_parent).each -> 
@@ -247,7 +249,7 @@ class Presentation
         p = this
         
         # change the faux include commands to properly included dom
-        $('.include').each (i) ->
+        $('.svg_include').each (i) ->
             div = $(this)
             div.empty()
             p.unique_number += 1
@@ -453,8 +455,8 @@ class Presentation
             
             # if there's only one SVG, just go ahead and start editing
             
-            if $('.include', current).length == 1
-                p.inplaceEdit($('.include', current).eq(0))
+            if $('.svg_include', current).length == 1
+                p.inplaceEdit($('.svg_include', current).eq(0))
                 return
             
             # otherwise, start up the SVG picker mode
@@ -462,7 +464,7 @@ class Presentation
             @transientMessage('Click on an SVG to edit')
             # use an external editing application, via the showboat_server
             if external
-                $('.include').on('click.edit_include', ->
+                $('.svg_include').on('click.edit_include', ->
                     # launch an external editor via GET call to showboat_server
                     $.get('edit/' + $(this).attr('src'))
                     # gray out the screen to indicate the mode change
@@ -470,8 +472,8 @@ class Presentation
             
             # use svg-edit in-place to edit
             else
-                $('.include',current).css('background', 'rgb(0.5,0.5,0.5)')
-                $('.include',current).on('click.edit_include', ->
+                $('.svg_include',current).css('background', 'rgb(0.5,0.5,0.5)')
+                $('.svg_include',current).on('click.edit_include', ->
                     p.inplaceEdit($(this)))    
         else
             
@@ -490,10 +492,10 @@ class Presentation
         
         @edit_picker_enabled = false
         
-        $('.include').removeClass('svg_editor')
+        $('.svg_include').removeClass('svg_editor')
         
         # remove the clicking behavior on the include
-        $('.include').unbind('click.edit_include')
+        $('.svg_include').unbind('click.edit_include')
         # reload
         @loadIncludes()
         @showCurrent( @resetCurrent() )
@@ -623,7 +625,7 @@ class Presentation
     
     
     toggleTOC: ->
-        $('#toc').fadeToggle()
+        $('#toc').toggle()
         
     checkURLBarLocation: ->
         if (result = window.location.hash.match(/#([0-9]+)/))
