@@ -22,12 +22,15 @@ parser.add_argument('--nothumbs', action='store_true', default=False,
                     help='do not make slide thumbnails')
 parser.add_argument('--src_path', default='.',
                     help='the project path')
+# parser.add_argument('--slide_number', default=1, help='slide to start at')
 
 
 args = parser.parse_args()
 
 index_path = os.path.abspath(os.path.expanduser(os.path.join(args.out_path, 
-                                                'index.html')))
+                                                "index.html")))
+
+# index_path += '#' + args.slide_number
 
 if args.command == 'start':
     deposit_skeleton(args.src_path)

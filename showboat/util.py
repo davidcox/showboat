@@ -141,6 +141,7 @@ def view_url(url):
     if os.path.exists(url):
         url = "file://" + url
     cmd = Template(config['view_url_cmd']).render(url=url)
+    print cmd
     syscall(cmd)
 
 def present_url(url):

@@ -26,9 +26,11 @@ build_types =
     opacity: (slide, target, op, duration='slow') ->
         @last_opacity
         do: (cb) ->
+            console.log('doing opacity')
             @last_opacity = $(target, slide).css('opacity')
             lo = @last_opacity
             $(target, slide).animate({'opacity': op}, duration, cb)
+            
         undo: (cb) ->
             # restore a previously stored opacity, if one is available 
             if @last_opacity != undefined
@@ -52,10 +54,11 @@ build_types =
 
     composite: (subbuilds) ->
         do: (cb) -> 
-            b.do() for b in subbuilds
+            res = (b.do() for b in subbuilds)
+            console.log(res)
             cb() if cb
         undo: (cb) -> 
-            b.undo() for b in subbuilds
+            res = (b.undo() for b in subbuilds)
             cb() if cb
             
     # ... many more to come ...
@@ -64,11 +67,11 @@ build_types =
 # An object to encapsulate the bookkeeping of each slide
 class Slide
     @build_list
-    @current_build
+    @current_build_idx
 
     constructor: (@slide_div) ->
         @build_list = []
-        @current_build = 0
+        @current_build_idx = 0
         @first_show = true
         
         if !slide_div.attr('id')
@@ -77,12 +80,19 @@ class Slide
                         
         # Parse and add the builds
         bl = @build_list
-        $('.build, .incremental ul li, .incremental > *:not(ul)', 
+        slide = this
+        $('.build, .set, .incremental ul li, .incremental li, .incremental > *:not(ul)', 
           @slide_div).each (i) ->
             b = $(this)
             
+            # flag is this is a "set" directive
+            set_directive = false
+            if b.hasClass('set')
+                set_directive = true
+            
             # if it's a build directive, parse it appropriately
-            if b.hasClass('build')
+            if b.hasClass('build') or set_directive
+                
                 # get the "content" of the build directive
                 bstr = b.text()
                 subbstrs = bstr.split(/\n+|;\n*/)
@@ -110,15 +120,29 @@ class Slide
                     
                     if $(target) is null
                         alert("Invalid target #{target} in build #{subbstr}")
+                    
+                    target = slide.modifyTargetIdForUniqueness(target)
+                    
+                    build_obj = build_types[type](@slide_div, target, args...)
 
-                    subbuilds.push(build_types[type](@slide_div, target, args...))
+                    # if it is a "set", modify the build a bit
+                    if set_directive
+                        build_obj.undo = build_obj.do
+                        build_obj.do = () -> 
+                        build_obj.auto_advance = true
+                    else
+                        build_obj.auto_advance = false
+                        
+                    subbuilds.push(build_obj)
                 
                 if subbuilds.length == 0
-                    alert('blah!!')
+                    alert('Unable to build composite build: no sub builds...')
                 else if subbuilds.length == 1
                     bl.push(subbuilds[0])
                 else
-                    bl.push(build_types['composite'](subbuilds.slice(0).reverse()))
+                    composite_build = build_types['composite'](subbuilds.slice(0).reverse())
+                    composite_build.auto_advance = subbuilds[0].auto_advance
+                    bl.push(composite_build)
                 
             # for "ordinary" incremental display
             else
@@ -132,14 +156,25 @@ class Slide
         
         return this
 
+    modifyTargetIdForUniqueness: (target) ->
+        slide_id = @slide_div.attr('id')
+        this_slide = @slide_div
+        
+        new_target = target.replace(/#/g,'') + '_' + slide_id
+        new_target_sel = '#' + new_target
+        
+        $(target, this_slide).attr('id', new_target)
+        
+        return new_target_sel
+
     getDiv: ->
         return @slide_div
 
     reset: ->
-        # if @build_list.length > 0
-        #   recursiveUndoBuilds(@build_list)
+        # undo the builds in reverse order
+        console.log('reseting: ' + @slide_div.eq(0).attr('id'))
         build.undo() for build in @build_list.slice(0).reverse()
-        @current_build = 0
+        @current_build_idx = 0
         
     fullReset: ->
         @first_show = true
@@ -147,22 +182,33 @@ class Slide
     hasBuilds: -> !@build_list.empty
 
     doNextBuild: ->
-        if @current_build >= @build_list.length
+        if @current_build_idx >= @build_list.length
             return false
         else
-            @build_list[@current_build].do()
-            @current_build += 1
+            current_build = @build_list[@current_build_idx]
+            
+            current_build.do()
+            @current_build_idx += 1
+            
+            console.log(current_build.auto_advance)
+            if current_build.auto_advance
+                return @doNextBuild()
+            
             return true
     
     undoPreviousBuild: ->
 
-        @current_build -= 1
+        @current_build_idx -= 1
         
-        if @current_build < 0
-            @current_build = 0
+        if @current_build_idx < 0
+            @current_build_idx = 0
             return false
         else
-            @build_list[@current_build].undo()    
+            current_build = @build_list[@current_build_idx]
+            current_build.undo()  
+            
+            if current_build.auto_advance
+                return @undoPreviousBuild()
             return true
     
     show: (cb) ->
@@ -171,9 +217,6 @@ class Slide
             @first_show = false
         $(@slide_div).show(0, cb)
         
-        # try to scale all of the images to be sensible
-        # $(@slide_div).imagefit()
-
         # I'm not sure why this is needed...
         @refreshVisibility(@slide_div)
     
@@ -213,8 +256,8 @@ class Presentation
         # caching of includes
         @unique_number = 0
                 
-        # load DOM pseudo-includes
-        @loadIncludes()
+        # load DOM pseudo-includes, synchronously, before slide objs are created
+        @loadIncludes(false)
         
         # load the slides
         sl = @slides
@@ -229,12 +272,13 @@ class Presentation
         # add a slide controls overlay
         @initControls()
         
+        # build the table of contents
+        @buildTOC()
+                
         # bind appropriate handlers
         document.onkeydown = (evt) => @keyDown(evt)
         document.onkeyup = (evt) => @keyUp(evt)
         
-        # build the table of contents
-        @buildTOC()
         
         # setup up a recurring check to sync the browser location field with
         # the slideshow
@@ -245,7 +289,7 @@ class Presentation
         @actions = $({})
         
     
-    loadIncludes: ->
+    loadIncludes: (async=true)->
         p = this
         
         # change the faux include commands to properly included dom
@@ -258,9 +302,10 @@ class Presentation
             if div
                 $.ajax(
                     url: path
+                    async: async
                     success: (xml) ->
                         div.get(0).appendChild(xml.documentElement)
-                        p.showCurrent(-> p.resetCurrent())
+                        #p.showCurrent(-> p.resetCurrent())
                     error: (err) ->
                         div.append($("<p>An error occurred loading #{path}</p>"))
                 )
@@ -272,7 +317,8 @@ class Presentation
             console.log("opacity = #{op}")
             if $(this).css('opacity') == undefined
                 $(this).css('opacity', 1.0)
-                
+    
+    
     # -----------------------------------------------------------------------
     # Movement
     # -----------------------------------------------------------------------

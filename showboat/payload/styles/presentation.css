@@ -30,6 +30,7 @@ div.slide {
   margin: auto;
   position: relative;
 /*  display:hidden;*/
+
 }
 
 /* Non-rendering items */
@@ -37,6 +38,7 @@ div.slide {
 div.build { display: none; }
 div.notes { display: none; }
 div.title { display: none; }
+div.set { display: none; }
 
 
 div.svg_include {
@@ -168,7 +170,7 @@ svg {
   height: 100%;
 }
 
-img.fullscreen {
+/*img.fullscreen {
   vertical-align: 'center';
   width: 100%;
   height: 100%;
@@ -188,16 +190,13 @@ img.fullscreen {
 .fullscreen embed {
   width: 100%;
   height: 100%;
-}
+}*/
 
 
 .centered {
   /* basic styling */
   width: 100%;
   height: 100%;
-  font-size: 14px;
-  border: 1px solid #555;
-  background : #CFC;
 
   /* flexbox, por favor */
   display: -webkit-box;
@@ -214,20 +213,22 @@ img.fullscreen {
   box-orient: horizontal;
   box-pack: center;
   box-align: center;
-}​
+}
 
 /* Headers and text */
 
-h1,h2,h3 { 
+.slide h1,h2,h3 { 
     font-weight: strong; 
     text-align: left; 
     margin: 0.5em 0; 
 }
-h1 { font-size: 4em; }
-h2 { font-size: 3em; }
-h3 { font-size: 2em; }
+.slide h1 { font-size: 4em; }
+.slide h2 { font-size: 3em; }
+.slide h3 { font-size: 2em; }
 
-pre { 
+.slide li { font-size: 3em; }
+
+.slide pre { 
     margin: 1em 40px; 
     padding: .25em; 
 }
@@ -243,6 +244,17 @@ pre {
   bottom: 10%;
   right:10%;
   height: 25%;
+}
+
+.citation {
+  position: absolute;
+  top: 90%;
+  bottom: 0;
+  left:0;
+  right:0;
+  padding: 3%;
+  text-align: right;
+  font-size: 1em;
 }
 
 
