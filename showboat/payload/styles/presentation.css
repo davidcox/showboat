@@ -227,6 +227,8 @@ svg {
     text-align: left; 
     margin-left: 5%;
     margin-right: 5%;
+    margin-top: 0;
+    margin-bottom: 0;
 /*    margin: 0.5em 0; */
 }
 .slide h1 { 
@@ -277,8 +279,10 @@ svg {
 .lower_right{
   position: absolute;
   bottom: 10%;
-  right:10%;
+  left: 50%;
+  right:5%;
   height: 25%;
+  text-align: right;
 }
 
 .citation {
