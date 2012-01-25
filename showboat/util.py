@@ -125,12 +125,24 @@ def build_slide_thumbnails(dst_path, n_slides, async=True):
         if async:
             from threading import Thread
             from functools import partial
-            threads = [Thread(target=partial(generate_one_thumbnail, n)) \
-                       for n in range(0, n_slides)]
-            for t in threads:
-                t.start()
-            for t in threads:
-                t.join()
+            
+            batch_size = 4
+            
+            for b in range(0, (n_slides / batch_size) + 1):
+                low = b  * batch_size
+                high = (b+1) * batch_size - 1
+                
+                if low > n_slides:
+                    break
+                if high > n_slides:
+                    high = n_slides
+                    
+                threads = [Thread(target=partial(generate_one_thumbnail, n)) \
+                           for n in range(low, high)]
+                for t in threads:
+                    t.start()
+                for t in threads:
+                    t.join()
         else:
             map(generate_one_thumbnail, range(0, n_slides))
 
@@ -141,6 +153,7 @@ def view_url(url):
     if os.path.exists(url):
         url = "file://" + url
     cmd = Template(config['view_url_cmd']).render(url=url)
+    print cmd
     syscall(cmd)
 
 def present_url(url):
