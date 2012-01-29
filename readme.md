@@ -20,12 +20,12 @@ As part of #3, there is something that has the flavor of a modest a little domai
 
 The basic idea is that one can write a simple, clean skeleton in Jade and achieve relatively complex behavior:
 
-    .slide
+    slide
         img#d1(src="diagram1.png")
         img#d2(src="diagram2.png")
 
-        .build fade_in(#d1)
-        .build
+        build fade_in(#d1)
+        build
             | fade_out(#d1)
             | fade_in(#d2)
 
@@ -33,7 +33,7 @@ The above example starts as a blank screen, and then on user key presses shows t
 
 Also, simple slidy-style bullety things like:
     
-    .slide
+    slide
         h1 My presentation
         h2 it has lots of text
         

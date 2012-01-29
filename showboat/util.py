@@ -11,6 +11,8 @@ import time
 from contextlib import contextmanager
 from ConfigParser import SafeConfigParser
 
+
+showboat_keywords = ('slide', 'build', 'notes', 'svg_include')
 top_level_module_name = __name__.split('.')[0]
 
 # Configuration details
@@ -47,26 +49,35 @@ def rsync(src, dst):
     cmd = Template(config['sync_cmd']).render(src_path=src, dst_path=dst)
     syscall(cmd)
 
+def preprocess_jade(jade_str):
+    
+    for kw in showboat_keywords:
+        jade_str = re.sub(r'%s(\s|\(|\.)' % kw, r'.%s\1' % kw, jade_str)
+    
+    return jade_str
+
 def jade_compile(src_path, dst_path):
-    #os.system('jade %s --out %s' % (src_path, dst_path))
+    
     resource_path = resource_filename(top_level_module_name, 'payload/')
     print("resource path: %s" % os.listdir(resource_path))
     
-    # index_path = resource_filename(top_level_module_name, 'payload/index.jade')
-    # shutil.copy(index_path, dst_path)
-    
-    #lib_path = resource_filename(top_level_module_name, 'payload/showboat.jade')
-    #shutil.copy(lib_path, dst_path)
-
     src_files = [os.path.join(src_path, f) for f in os.listdir(src_path)]
     resource_files = [os.path.join(resource_path, f) for f in 
                       os.listdir(resource_path)]
 
-    for f in (resource_files + src_files):
+    for fp in (resource_files + src_files):
         try:
-            if f.split('.')[-1] == 'jade':
-                shutil.copy(os.path.abspath(os.path.expanduser(f)), dst_path)
-        except:
+            if fp.split('.')[-1] == 'jade':
+                full_path = os.path.abspath(os.path.expanduser(fp))
+                fn = os.path.split(full_path)[-1]
+                with open(full_path, 'r') as f:
+                    f_str = '\n'.join(f.readlines())
+                    preproc = preprocess_jade(f_str)
+                    with open(os.path.join(dst_path, fn), 'w') as out_f:
+                        out_f.write(preproc)
+                # shutil.copy(, dst_path)
+        except Exception as e:
+            print e
             pass
     jade_cmd = Template(config['html_compile_cmd']).render(dst_path=dst_path)
     syscall(jade_cmd)
