@@ -9,6 +9,7 @@ from mako.template import Template
 import urllib
 import time
 from contextlib import contextmanager
+from ConfigParser import SafeConfigParser
 
 top_level_module_name = __name__.split('.')[0]
 
@@ -24,7 +25,7 @@ def read_config(cfg_path):
 
 def default_config():
     return read_config(resource_filename(top_level_module_name, 
-                                  'resources/config/default.config'))
+                                  'config/default.config'))
 
 def load_config():
     # check for .plotsk in ~/
@@ -35,6 +36,7 @@ def load_config():
     return default_config()
 
 config = load_config()
+print config
 
 # work around bizarro pkg_resources / MACOSX_DEPLOYMENT_TARGET insanity
 def syscall(cmd):
