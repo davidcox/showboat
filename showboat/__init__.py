@@ -24,6 +24,8 @@ def compile(src_path, out_path, copy_assets=False, overwrite_output=True,
         except:
             pass
     
+    print("Outputting presentation to %s..." % out_path)
+    
     os.mkdir(out_path)
     
     
