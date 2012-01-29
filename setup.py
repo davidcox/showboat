@@ -5,14 +5,14 @@
 
 from distribute_setup import use_setuptools
 use_setuptools()
-from setuptools import setup
+from setuptools import setup, findall
 
 import re
 
 def subdir_findall(dir, subdir):
     strip_n = len(dir.split('/'))
     path = '/'.join((dir, subdir))
-    return ['/'.join(s.split('/')[strip_n:]) for s in setuptools.findall(path)]
+    return ['/'.join(s.split('/')[strip_n:]) for s in findall(path)]
 
 
 setup(
@@ -21,7 +21,7 @@ setup(
     version='dev',
     include_package_data=True,
 
-    packages=['showboat']
-    package_data = { 'showboat' : subdir_findall('showboat', 'payload')}
+    packages=['showboat'],
+    package_data = { 'showboat' : subdir_findall('showboat', 'payload')},
     scripts=['scripts/showboat', 'scripts/showboat_server'],
 )
