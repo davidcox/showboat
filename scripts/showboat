@@ -22,6 +22,8 @@ parser.add_argument('--nothumbs', action='store_true', default=False,
                     help='do not make slide thumbnails')
 parser.add_argument('--src_path', default='.',
                     help='the project path')
+parser.add_argument('--alt', action='store_true', default=False,
+                    help='use the alternative viewer application')
 # parser.add_argument('--slide_number', default=1, help='slide to start at')
 
 
@@ -52,7 +54,7 @@ else:
             print("Compilation was not required. Use --recompile to force.")
     
     elif args.command == 'view':
-        view_url(index_path)
+        view_url(index_path, use_alt=args.alt)
     
     elif args.command == 'present':
         present_url(index_path)

@@ -36,7 +36,6 @@ def load_config():
     return default_config()
 
 config = load_config()
-print config
 
 # work around bizarro pkg_resources / MACOSX_DEPLOYMENT_TARGET insanity
 def syscall(cmd):
@@ -158,11 +157,17 @@ def build_slide_thumbnails(dst_path, n_slides, async=True):
 
     print('Done building thumbnails (took %f seconds).' % (time.time()-tic) )
 
-def view_url(url):
+def view_url(url, use_alt=False):
+    
+    if use_alt:
+        app_key = 'alt_view_url_cmd'
+    else:
+        app_key = 'view_url_cmd'
+    
     # check if it is a file
     if os.path.exists(url):
         url = "file://" + url
-    cmd = Template(config['view_url_cmd']).render(url=url)
+    cmd = Template(config[app_key]).render(url=url)
     print cmd
     syscall(cmd)
 
