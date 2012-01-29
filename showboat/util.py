@@ -13,16 +13,24 @@ from contextlib import contextmanager
 top_level_module_name = __name__.split('.')[0]
 
 # Configuration details
+def read_config(cfg_path):
+    cp = SafeConfigParser()
+    cp.read(cfg_path)
+    
+    d = {}
+    for section in cp.sections():
+        d.update(dict(cp.items(section)))
+    return d
+
 def default_config():
-    return json.loads(resource_string(top_level_module_name, 
-                                      'config/default.json'))
+    return read_config(resource_filename(top_level_module_name, 
+                                  'resources/config/default.config'))
 
 def load_config():
-    # check for .showboat.json in ~/
+    # check for .plotsk in ~/
     user_config_filename = os.path.expanduser('~/.showboat')
     if os.path.exists(user_config_filename):
-        with open(user_config_filename, 'r') as f:
-            return json.load(f)
+        return read_config(user_config_filename)
     # shortcut
     return default_config()
 
