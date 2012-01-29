@@ -1,5 +1,5 @@
 n_slides_global = 0
-use_html2canvas = true
+use_html2canvas = false
 
 # -----------------------------------------------------------------------
 # Slides and Builds
