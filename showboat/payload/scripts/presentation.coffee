@@ -1,4 +1,5 @@
 n_slides_global = 0
+use_html2canvas = false
 
 # -----------------------------------------------------------------------
 # Slides and Builds
@@ -124,7 +125,7 @@ class Slide
                     if $(target) is null
                         alert("Invalid target #{target} in build #{subbstr}")
                     
-                    target = slide.modifyTargetIdForUniqueness(target)
+                    #target = slide.modifyTargetIdForUniqueness(target)
                     
                     build_obj = build_types[type](@slide_div, target, args...)
 
@@ -168,6 +169,7 @@ class Slide
         new_target = target.replace(/#/g,'') + '_' + slide_id
         new_target_sel = '#' + new_target
         
+        console.log('modifying ' + target + ' to ' + new_target)
         $(target, this_slide).attr('id', new_target)
         
         return new_target_sel
@@ -689,8 +691,13 @@ class Presentation
             li = $('<li></li>')
             
             # generate a faux-thumbnail
-            #p.generateThumbnailForSlide(i, li)
-            a.append("<img src=\"thumbnails/slide_#{i+1}-thumb.png\" width=\"200\" height=\"150\" alt=\"\"/>")
+            if use_html2canvas
+                thumb_div = $('<div width="100%" height="100%"/>')
+                li.append(thumb_div)
+                p.generateThumbnailForSlide(i, thumb_div)
+                a.append(thumb_div)
+            else
+                a.append("<img src=\"thumbnails/slide_#{i+1}-thumb.png\" width=\"200\" height=\"150\" alt=\"\"/>")
             
             li.append(a)
             
