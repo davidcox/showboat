@@ -9,29 +9,10 @@ from setuptools import setup
 
 import re
 
-
-def parse_requirements(file_name):
-    requirements = []
-    for line in open(file_name, 'r').read().split('\n'):
-        if re.match(r'(\s*#)|(\s*$)', line):
-            continue
-        if re.match(r'\s*-e\s+', line):
-            requirements.append(re.sub(r'\s*-e\s+.*#egg=(.*)$', r'\1', line))
-        elif re.match(r'\s*-f\s+', line):
-            pass
-        else:
-            requirements.append(line)
-
-    return requirements
-
-
-def parse_dependency_links(file_name):
-    dependency_links = []
-    for line in open(file_name, 'r').read().split('\n'):
-        if re.match(r'\s*-[ef]\s+', line):
-            dependency_links.append(re.sub(r'\s*-[ef]\s+', '', line))
-
-    return dependency_links
+def subdir_findall(dir, subdir):
+    strip_n = len(dir.split('/'))
+    path = '/'.join((dir, subdir))
+    return ['/'.join(s.split('/')[strip_n:]) for s in setuptools.findall(path)]
 
 
 setup(
@@ -40,10 +21,7 @@ setup(
     version='dev',
     include_package_data=True,
 
+    packages=['showboat']
+    package_data = { 'showboat' : subdir_findall('showboat', 'payload')}
     scripts=['scripts/showboat', 'scripts/showboat_server'],
-    
-    install_requires=parse_requirements('requirements.txt'),
-    dependency_links=parse_dependency_links('requirements.txt'),
-
-    #test_suite="nose.collector",
 )
