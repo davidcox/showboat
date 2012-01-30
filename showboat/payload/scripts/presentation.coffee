@@ -65,6 +65,35 @@ build_types =
     # ... many more to come ...
 
 
+# JQuery is buggy as hell when it comes to anything not-exactly-HTML.
+# In particular, selectors into SVG behave in unpredictable ways.
+# This recursive function searches each and every element, depth first,
+# until it finds the matching ID
+exhaustiveSearchByID = (parent, id) ->
+    
+    if parent == null or parent.getAttribute == undefined
+        return null
+    
+    if parent.getAttribute('id') == id
+        return $(parent)
+
+    children = []
+    if parent.getChildren != undefined
+        children = parent.getChildren()
+        
+    if parent.childNodes != undefined
+        children = parent.childNodes
+        
+    if children.length == 0
+        return null
+    
+    for child in children
+        ret = exhaustiveSearchByID(child, id)
+        if ret != null
+            return ret
+            
+    return null
+
 # An object to encapsulate the bookkeeping of each slide
 class Slide
     @build_list
@@ -125,7 +154,7 @@ class Slide
                     if $(target) is null
                         alert("Invalid target #{target} in build #{subbstr}")
                     
-                    #target = slide.modifyTargetIdForUniqueness(target)
+                    target = slide.modifyTargetIdForUniqueness(target)
                     
                     build_obj = build_types[type](@slide_div, target, args...)
 
@@ -165,12 +194,31 @@ class Slide
     modifyTargetIdForUniqueness: (target) ->
         slide_id = @slide_div.attr('id')
         this_slide = @slide_div
+
+        target_id = target.replace(/#/g,'')
+
+        # t = $(target, this_slide)
+        t = this_slide.find(target)
+        console.log(t)
         
-        new_target = target.replace(/#/g,'') + '_' + slide_id
+        new_target = target_id + '_' + slide_id
         new_target_sel = '#' + new_target
         
+        if t == undefined or t == null or t.length == 0
+            # try to route around bugs in JQuery selection into SVGs
+            t = exhaustiveSearchByID($('svg', this_slide).get(0), target_id)
+        
+        if t == undefined or t == null or t.length == 0
+            # if we still couldn't find an appropriate match, just pass back the original
+            # target selector, unmodified
+            console.log('Could not find element matching target: ' + target)
+            return target
+            
+        console.log(t)
         console.log('modifying ' + target + ' to ' + new_target)
-        $(target, this_slide).attr('id', new_target)
+
+        t.attr('id', new_target)
+        console.log('now: ' + t.attr('id') + ', ' + t)
         
         return new_target_sel
 
@@ -319,7 +367,7 @@ class Presentation
         $('body').css('font-size', new_font_size)
         
     
-    loadIncludes: (async=true)->
+    loadIncludes: (async=false)->
         p = this
         
         # change the faux include commands to properly included dom
@@ -342,11 +390,11 @@ class Presentation
                 #$.get(path, success, error)
         
         
-        $('g').each (i) ->
-            op = $(this).css('opacity')
-            console.log("opacity = #{op}")
-            if $(this).css('opacity') == undefined
-                $(this).css('opacity', 1.0)
+        # $('g').each (i) ->
+        #             op = $(this).css('opacity')
+        #             console.log("opacity = #{op}")
+        #             if $(this).css('opacity') == undefined
+        #                 $(this).css('opacity', 1.0)
     
     
     # -----------------------------------------------------------------------
