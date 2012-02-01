@@ -118,7 +118,7 @@ def serve_http(root_path='.', host='localhost', port=8080, timeout=5.0,
 
     while not connected and time.time() - tic < timeout:
         try:
-            urllib.urlopen('http://localhost:8080/index.html')
+            urllib.urlopen('http://%s:%s/index.html' % (host, port))
             connected = True
         except IOError:
             pass
