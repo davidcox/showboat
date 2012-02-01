@@ -335,6 +335,14 @@ class Presentation
         # bind appropriate handlers
         document.onkeydown = (evt) => @keyDown(evt)
         document.onkeyup = (evt) => @keyUp(evt)
+
+        # handlers for jquery mobile events
+        $('#presentation').bind('tap', (evt) => @advanceQueued())
+        $('#presentation').bind('swipeleft', (evt) => @advanceSlideQueued())
+        $('#presentation').bind('swiperight', 
+                                (evt) => 
+                                    @revertSlideQueued()
+                                    @resetCurrentQueued())
         
         # setup up a recurring check to sync the browser location field with
         # the slideshow
@@ -439,6 +447,12 @@ class Presentation
         a.queue('user_interaction', -> p.revertSlide() )
         a.dequeue('user_interaction')
     
+    resetSlideQueued: ->
+        p = this
+        a = @actions
+        a.queue('user_interaction', -> p.resetCurrent() )
+        a.dequeue('user_interaction')
+
     # move to next slide
     advanceSlide: ->
         @current_slide_idx += 1
