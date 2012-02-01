@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import bottle
 from showboat.util import launch_external_svg_editor, save_svg_file
-from mako.template import Template
 import argparse
 import os
-
 
 # parse commandline args
 parser = argparse.ArgumentParser(description='Serve a showboat presentation')
@@ -20,14 +19,17 @@ args = parser.parse_args()
 
 app = bottle.Bottle()
 
+
 # TODO: routes for launching editing applications on the "server"-side
-# wouldn't it be neat if there were an "edit" option that could locally launch 
+# wouldn't it be neat if there were an "edit" option that could locally launch
 # whatever external editor I like?
+
 @app.route('/edit/<file_path:path>.svg')
 def edit(file_path):
-    local_path = os.path.join(args.root_path,file_path + '.svg')
+    local_path = os.path.join(args.root_path, file_path + '.svg')
     local_path = os.path.abspath(os.path.expanduser(local_path))
     launch_external_svg_editor(local_path)
+
 
 @app.post('/save/<path:path>.svg')
 def save(path):
@@ -36,13 +38,12 @@ def save(path):
     local_path = os.path.abspath(os.path.expanduser(local_path))
     save_svg_file(local_path, data)
 
-    print("Saved to {%s}" % local_path)
-    return "OK"
+    print 'Saved to {%s}' % local_path
+    return 'OK'
+
 
 @app.route('/<path:path>')
 def static_route(path):
     return bottle.static_file(path, args.root_path)
-    
-
 
 bottle.run(app, host=args.host, port=args.port, quiet=True, server='cherrypy')
