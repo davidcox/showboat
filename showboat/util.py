@@ -57,9 +57,9 @@ def rsync(src, dst):
 
 
 def preprocess_jade(jade_str):
-
+    return jade_str
     for kw in showboat_keywords:
-        jade_str = re.sub(r'%s(\s|\(|\.)' % kw, r'.%s\1' % kw, jade_str)
+        jade_str = re.sub(r'^(\s*)%s(\s|\(|\.)' % kw, r'\1.%s\2' % kw, jade_str)
 
     return jade_str
 
@@ -79,7 +79,7 @@ def jade_compile(src_path, dst_path):
                 full_path = os.path.abspath(os.path.expanduser(fp))
                 fn = os.path.split(full_path)[-1]
                 with open(full_path, 'r') as f:
-                    f_str = '\n'.join(f.readlines())
+                    f_str = ''.join(f.readlines())
                     preproc = preprocess_jade(f_str)
                     with open(os.path.join(dst_path, fn), 'w') as out_f:
                         out_f.write(preproc)
