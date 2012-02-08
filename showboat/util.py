@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import re
+import sys
 from pkg_resources import resource_filename
 import shlex
 import subprocess
@@ -187,7 +188,10 @@ def view_url(url, use_alt=False):
         url = 'file://' + url
     cmd = Template(config[app_key]).render(url=url)
     print cmd
-    syscall(cmd)
+    try:
+        syscall(cmd)
+    except Exception, e:
+        print >> sys.stderr, "Failed to launch browser", e
 
 
 def present_url(url):
