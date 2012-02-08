@@ -11,7 +11,7 @@ import time
 from contextlib import contextmanager
 from ConfigParser import SafeConfigParser
 
-showboat_keywords = ('slide', 'build', 'notes', 'svg_include')
+showboat_keywords = ('slide', 'build', 'notes', 'set', 'svg_include')
 top_level_module_name = __name__.split('.')[0]
 
 
@@ -58,7 +58,10 @@ def rsync(src, dst):
 
 def preprocess_jade(jade_str):
     for kw in showboat_keywords:
-        jade_str = re.sub(r'^(\s*)%s(\s|\(|\.)' % kw, r'\1.%s\2' % kw, jade_str)
+        jade_str = re.sub(r'^(\s*)(%s)(\s|\(|\.|\#|$)' % kw,
+                   r'\1.\2\3',
+                   jade_str,
+                   flags=re.M)
 
     return jade_str
 
