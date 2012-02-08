@@ -57,7 +57,6 @@ def rsync(src, dst):
 
 
 def preprocess_jade(jade_str):
-    return jade_str
     for kw in showboat_keywords:
         jade_str = re.sub(r'^(\s*)%s(\s|\(|\.)' % kw, r'\1.%s\2' % kw, jade_str)
 
