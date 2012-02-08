@@ -51,14 +51,14 @@ else:
 
     if args.command == 'recompile':
         pass
-    
+
     elif args.command == 'compile':
         if not must_compile:
             print 'Compilation was not required. Use --recompile to force.'
-  
+
     elif args.command == 'view':
         view_url(index_path, use_alt=args.alt)
-    
+
     elif args.command == 'present':
         present_url(index_path)
 
@@ -71,7 +71,7 @@ else:
 
         with serve_http(root_path=root_path, src_path=src_path,
                         host=args.host, port=args.port):
-            print(('HTTP Server launched on http://%s:%s.html. ' + 
+            print(('HTTP Server launched on http://%s:%s.html. ' +
                    'Press Ctl-C to quit.') % (args.host, args.port))
 
             try:
