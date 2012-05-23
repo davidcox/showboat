@@ -58,9 +58,13 @@ HTML was designed for displaying long flowing page layouts, and while it is poss
 
 Showboat needs the following external parts to work:
 
-* [Jade](http://jade-lang.com): for minimal markup
-* [Coffeescript](http://coffeescript.org): for the main script (I found this much preferable to raw javascript)
-* [webkit2png](http://www.paulhammond.org/webkit2png/): for making thumbnails (optional; probably other ways to get this done on other platforms)
+* [Jade](http://jade-lang.com): for minimal markup. `npm install -g jade`
+* [Coffeescript](http://coffeescript.org): for the main script (I found this much preferable to raw javascript) `npm install -g coffee-script`
+* OS-X: [webkit2png](http://www.paulhammond.org/webkit2png/): for making thumbnails (optional; probably other ways to get this done on other platforms)
+* Linux: (https://github.com/AdamN/python-webkit2png/): for making thumbnails, see calling convention in linux.config instead of default.config.
+* [cherrypy](http://cherrypy.org/): as if this project needed another internal web framework `pip install --user cherrypy`
+* [bottle](http://bottlepy.org/docs/dev/): another web framework for good measure `pip install --user bottle`
+
 
 All of the above are `brew install`-able on Mac, though using a different tool (e.g. for making the thumbnails) is just a matter of changing the helper command (see *Helpers*, below).
 
