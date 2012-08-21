@@ -1,7 +1,9 @@
 from pyparsing import *
 from copy import copy
+import functools
 
 registry = {}
+
 
 class Value (object):
     def __init__(self, v):
@@ -17,16 +19,17 @@ class MagicCmd (object):
         self.content_under = ''
         self.indent = indent
 
-    def __call__(self, fn_registry):
+    def transform(self, fn_registry):
         if self.name in fn_registry:
             args = copy(self.args)
             kwargs = copy(self.kwargs)
             kwargs['content_after'] = self.content_after
             kwargs['content_under'] = self.content_under
-            print "!", self.content_under
+            kwargs['indent_level'] = self.indent
+            kwargs['magic_name'] = self.name
             return fn_registry[self.name](*args, **kwargs)
         else:
-            raise ValueError('Not a valid magic function name')
+            raise ValueError('Not a valid magic function name: %s' % (self.name))
 
     def __repr__(self):
         return ('INDENT: (%s), ID: %s, ARGS: %s, KWARGS: %s, REST: "%s", UNDER: %s' %
@@ -36,7 +39,7 @@ class MagicCmd (object):
 magic_char = Suppress('@')
 lparen = Suppress('(')
 rparen = Suppress(')')
-identifier = Word(alphanums)
+identifier = Word(alphanums + '_')
 comma = Suppress(',')
 line_start = Suppress(Regex(r'\n'))
 indent = Regex(r'[ \t]*').leaveWhitespace()
@@ -68,46 +71,85 @@ magic_cmd.setParseAction(lambda x: MagicCmd(x.indent, x.id,
                                             x.args, x.kwargs, x.rest))
 
 
+def pad_str(s):
+    return '\n' + s
+
+
+def unpad_str(s):
+    return s[1:]
+
+
 def recursive_evaluate_magics(s, fn_registry):
+
+    s = pad_str(s)
 
     # find the first magic invokation
     try:
         m, mstart, mend = magic_cmd.scanString(s).next()
     except StopIteration:
-        return s
+        return unpad_str(s)
 
     magic_obj = m[0]
 
     # scan for indents, we'll bail at the first one less than
     # the indent level of the current magic
-    target_indent = len(m.indent_level)
+    target_indent = len(magic_obj.indent)
     content_under_end = len(s)
     for i, istart, iend in indented_line.scanString(s[mend:]):
         this_indent = len(i[0])
-        print "target:", target_indent
-        print "this indent:", this_indent
         if this_indent <= target_indent:
             content_under_end = mend + istart
             break
 
-    magic_obj.content_under = s[mend:content_under_end]
-    print "Content under: {%s}" % magic_obj.content_under
+    content_under = s[mend + 1:content_under_end]
 
-    print 'Found magic: %s' % m
-
+    magic_obj.content_under = recursive_evaluate_magics(content_under, fn_registry)
     # execute the magic
-    result = magic_obj(registry)
+    result = magic_obj.transform(registry)
 
-    pre = s[0:mstart]
+    # the part before the magic command
+    pre = s[0:mstart] + '\n' + magic_obj.indent
+
+    # everything after the close of the magic
     post = s[content_under_end:]
 
-    return recursive_evaluate_magics(pre + result + post, fn_registry)
+    new_string = pre + result + post
+    return unpad_str(recursive_evaluate_magics(new_string, fn_registry))
+
+def magic_function(arg=None):
+
+    def plain_decorator(fn, fn_name=None):
+        if fn_name is None:
+            registry[fn.__name__] = fn
+        else:
+            registry[fn_name] = fn
+
+        return fn
+
+    # hacky: if 'name' is actually a function, then this is an arg-less decorator
+    if type(arg) == type(plain_decorator):
+        return plain_decorator(arg)
+
+    return functools.partial(plain_decorator, fn_name=arg)
 
 
-def magic_function(fn):
-    registry[fn.__name__] = fn
+class magic_decorator (object):
 
-    return fn
+    def __init__(self, name=None):
+        self.name = name
+
+    def __call__(self, fn):
+        if self.name is None:
+            self.name = fn.__name__
+        print 'registering: %s' % self.name
+        registry[self.name] = fn
+
+        return fn
+
+
+def magic_identity(content_after='', content_under='', indent_level='', magic_name='identity'):
+    processed = magic_name + ' ' + content_after + '\n' + content_under
+    return processed
 
 
 @magic_function
@@ -127,19 +169,26 @@ def blah3(a1, a2, **kwargs):
 
 @magic_function
 def blah7(**kwargs):
-    return "BLAH7" + kwargs['content_after'].upper()
+    return "BLAH7" + ' ' + kwargs['content_after'].upper()
 
 
 @magic_function
 def blah4(**kwargs):
-    print kwargs
-    return "BLAH4" + kwargs['content_under']
+    print '{' + kwargs['content_under'] + '}'
+    return "BLAH4" + ' ' + kwargs['content_under']
 
+magic_function('iden_test')(magic_identity)
 
 def parse_magics(s):
+    return recursive_evaluate_magics(s, registry)
 
-    print recursive_evaluate_magics(s, registry)
-
+def test_magics(s):
+    print 'TEST STRING: '
+    print s
+    print '___________________'
+    print ''
+    print 'TRANSFORMED:'
+    print parse_magics(s)
 
 if __name__ == '__main__':
 
@@ -160,8 +209,10 @@ blah5
 
     test_str = """
 @blah4
-    stuff
-    @blah7 this
+    @iden_test balh
+        stuff
+    should_be_unindented
+    should be unindented 2
 """
 
-    parse_magics(test_str)
+    test_magics(test_str)
