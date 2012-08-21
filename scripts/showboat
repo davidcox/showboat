@@ -11,7 +11,7 @@ from showboat import (compile, deposit_skeleton, view_url, present_url,
 parser = argparse.ArgumentParser(description='View a showboat presentation'
                             )
 parser.add_argument('command', type=str,
-                    help='the command for showboat to perform')
+                    help='the command for showboat to perform: compile | view | serve')
 parser.add_argument('--copy_assets', action='store_true', default=False,
                     help='copy, rather than symlink, the assets directory')
 parser.add_argument('--out_path', '-o', default='./output',
