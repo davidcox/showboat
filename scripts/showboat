@@ -21,8 +21,8 @@ parser.add_argument('--recompile', action='store_true', default=False,
                     help='overwrite an existing compiles of the presentation')
 parser.add_argument('--force', dest='recompile', action='store_true',
                     help='overwrite an existing compiles of the presentation')
-parser.add_argument('--nothumbs', action='store_true', default=False,
-                    help='do not make slide thumbnails')
+parser.add_argument('--thumbs', action='store_true', default=False,
+                    help='make slide thumbnails')
 parser.add_argument('--src_path', default='.', help='the project path')
 parser.add_argument('--alt', action='store_true', default=False,
                     help='use the alternative viewer application')
@@ -47,7 +47,7 @@ else:
         or not os.path.exists(index_path)
     if must_compile:
         compile(args.src_path, args.out_path, copy_assets=args.copy_assets,
-                build_thumbnails=not args.nothumbs)
+                build_thumbnails=args.thumbs)
 
     if args.command == 'recompile':
         pass

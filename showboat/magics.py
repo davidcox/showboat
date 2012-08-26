@@ -147,9 +147,43 @@ class magic_decorator (object):
         return fn
 
 
-def magic_identity(content_after='', content_under='', indent_level='', magic_name='identity'):
-    processed = magic_name + ' ' + content_after + '\n' + content_under
-    return processed
+def linewise_prefix(content, prefix):
+    lines = content.split('\n')
+    prefixed = [prefix + l for l in lines]
+    return '\n'.join(prefixed)
+
+
+def register_magic_identity_function(name, prefix=''):
+    'Register a magic function that simply strips of the magic char'
+
+    def magic_identity(*args, **kwargs):
+        content_after = kwargs.pop('content_after', '')
+        content_under = kwargs.pop('content_under', '')
+        indent_level = kwargs.pop('indent_level', 0)
+        magic_name = kwargs.pop('magic_name', 'identity')
+
+        arg_list = ''
+
+        if len(args) or len(kwargs.items()):
+            arg_list += '('
+
+        if len(args) > 0:
+            arg_list += ', '.join([str(x) for x in args]) + ' '
+
+        if len(kwargs.items()):
+            arg_list += ', '.join([str(x) + "='" + str(y) + "'" for x, y in kwargs.items()])
+
+        if len(args) or len(kwargs.items()):
+            arg_list += ')'
+
+        indent = indent_level
+        processed = (indent + prefix + magic_name +
+                            arg_list + ' ' + content_after + '\n' +
+                            content_under)
+
+        return processed
+
+    return magic_function(name)(magic_identity)
 
 
 @magic_function
@@ -174,10 +208,9 @@ def blah7(**kwargs):
 
 @magic_function
 def blah4(**kwargs):
-    print '{' + kwargs['content_under'] + '}'
-    return "BLAH4" + ' ' + kwargs['content_under']
+    return "BLAH4" + ' {\n' + kwargs['content_under'] + '}'
 
-magic_function('iden_test')(magic_identity)
+register_magic_identity_function('iden_test')
 
 def parse_magics(s):
     return recursive_evaluate_magics(s, registry)

@@ -301,7 +301,7 @@ class Presentation
     # Setup
     # -----------------------------------------------------------------------
 
-    constructor: () ->
+    constructor: (@slave_mode=0) ->
         @slides = []
         @current_slide_idx = 0
 
@@ -322,31 +322,37 @@ class Presentation
             s = new Slide($(this))
             sl.push(s)
 
-        # display the first slide
-        @checkURLBarLocation()
-        @showCurrent()
+        if slave_mode
+            @current_slide_idx = 0
+            @showCurrent()
+            @checkMasterStatusPeriodically(100)
+        else
+            # display the first slide
+            @checkURLBarLocation()
+            @showCurrent()
 
-        # add a slide controls overlay
-        @initControls()
+            # add a slide controls overlay
+            @initControls()
 
-        # build the table of contents
-        @buildTOC()
+            # build the table of contents
+            @buildTOC()
 
-        # bind appropriate handlers
-        document.onkeydown = (evt) => @keyDown(evt)
-        document.onkeyup = (evt) => @keyUp(evt)
+            # bind appropriate handlers
+            document.onkeydown = (evt) => @keyDown(evt)
+            document.onkeyup = (evt) => @keyUp(evt)
 
-        # handlers for jquery mobile events
-        $('#presentation').bind('tap', (evt) => @advanceQueued())
-        $('#presentation').bind('swipeleft', (evt) => @advanceSlideQueued())
-        $('#presentation').bind('swiperight',
-                                (evt) =>
-                                    @revertSlideQueued()
-                                    @resetCurrentQueued())
+            # handlers for jquery mobile events
+            # $('#presentation').bind('tap', (evt) => @advanceQueued())
+            # $('#presentation').bind('swipeleft', (evt) => @advanceSlideQueued())
+            # $('#presentation').bind('swiperight',
+            #                         (evt) =>
+            #                             @revertSlideQueued()
+            #                             @resetCurrentQueued())
 
-        # setup up a recurring check to sync the browser location field with
-        # the slideshow
-        @checkURLBarPeriodically(100)
+            # setup up a recurring check to sync the browser location field with
+            # the slideshow
+            @checkURLBarPeriodically(100)
+
 
         # a queue to ensure that user commands happen in some kind of sane
         # sequence (actually, it's an empty element)
@@ -474,6 +480,15 @@ class Presentation
         @slides[i].hide() for i in [0 .. @slides.length-1] when i isnt @current_slide_idx
         @slides[@current_slide_idx].show(cb)
         location.hash = @current_slide_idx + 1
+
+        if !@slave_mode
+            # ajax back to mothership
+            # post the result to the showboat_server
+            $.ajax(
+                type: 'POST'
+                timeout: 100
+                url: 'current_slide/' + @current_slide_idx
+                )
 
     resetCurrent: ->
         @slides[@current_slide_idx].reset()
@@ -785,5 +800,29 @@ class Presentation
             setTimeout(check, interval)
         setTimeout(check, interval)
 
+    checkMasterStatus: ->
+        p = this
+        $.ajax(
+                url: '/current_slide'
+                type: 'GET'
+                dataType: 'text'
+                timeout: 1000
+                success: (value) ->
+                    console.log('got -> #{value} <- ')
+                    slide_number = Number(value)
+                    if !isNaN(slide_number) && slide_number != p.current_slide_idx
+                        p.current_slide_idx = slide_number
+                        p.showCurrent()
+                error: ->
+                    console.log('failed')
+            )
+
+    checkMasterStatusPeriodically: (interval) ->
+        p = this
+        check = ->
+            p.checkMasterStatus()
+            setTimeout(check, interval)
+        setTimeout(check, interval)
+
 $ ->
-    p = new Presentation()
+    p = new Presentation(slave_mode)

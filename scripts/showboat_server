@@ -19,6 +19,7 @@ args = parser.parse_args()
 
 app = bottle.Bottle()
 
+current_slide = 0
 
 # TODO: routes for launching editing applications on the "server"-side
 # wouldn't it be neat if there were an "edit" option that could locally launch
@@ -41,6 +42,22 @@ def save(path):
     print 'Saved to {%s}' % local_path
     return 'OK'
 
+
+@app.post('/current_slide/<index>')
+def update_slide_status(index):
+    print 'master client switched to slide: %s' % index
+    global current_slide
+    current_slide = index
+
+
+@app.route('/current_slide')
+def get_current_slide():
+    global current_slide
+    return current_slide
+
+@app.route('/push')
+def slave_presentation():
+    return bottle.static_file('push.html', args.root_path)
 
 @app.route('/<path:path>')
 def static_route(path):
