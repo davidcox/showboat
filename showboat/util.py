@@ -11,6 +11,8 @@ import time
 from contextlib import contextmanager
 from ConfigParser import SafeConfigParser
 
+from magics import register_magic_identity_function, parse_magics
+
 showboat_keywords = ('slide', 'build', 'notes', 'set', 'svg_include')
 top_level_module_name = __name__.split('.')[0]
 
@@ -58,11 +60,16 @@ def rsync(src, dst):
 
 def preprocess_jade(jade_str):
     for kw in showboat_keywords:
-        jade_str = re.sub(r'^(\s*)(%s)(\s|\(|\.|\#|$)' % kw,
-                   r'\1.\2\3',
-                   jade_str,
-                   flags=re.M)
+        # register a magic function for each kw
+        register_magic_identity_function(kw, prefix='.')
 
+        # this was a gnarly regex to add dots to kw tags
+        # jade_str = re.sub(r'^(\s*)(%s)(\s|\(|\.|\#|$)' % kw,
+        #            r'\1.\2\3',
+        #            jade_str,
+        #            flags=re.M)
+
+    jade_str = parse_magics(jade_str)
     return jade_str
 
 
@@ -76,19 +83,20 @@ def jade_compile(src_path, dst_path):
                       os.listdir(resource_path)]
 
     for fp in resource_files + src_files:
-        try:
-            if fp.split('.')[-1] == 'jade':
-                full_path = os.path.abspath(os.path.expanduser(fp))
-                fn = os.path.split(full_path)[-1]
-                with open(full_path, 'r') as f:
-                    f_str = ''.join(f.readlines())
-                    preproc = preprocess_jade(f_str)
-                    with open(os.path.join(dst_path, fn), 'w') as out_f:
-                        out_f.write(preproc)
-        except Exception, e:
-                # shutil.copy(, dst_path)
-            print e
-            pass
+        #try:
+        if fp.split('.')[-1] == 'jade':
+            full_path = os.path.abspath(os.path.expanduser(fp))
+            fn = os.path.split(full_path)[-1]
+            with open(full_path, 'r') as f:
+                f_str = ''.join(f.readlines())
+                preproc = preprocess_jade(f_str)
+                with open(os.path.join(dst_path, fn), 'w') as out_f:
+                    out_f.write(preproc)
+        # except Exception, e:
+        #         # shutil.copy(, dst_path)
+        #     print e
+        #     raise e
+        #     pass
     jade_cmd = Template(config['html_compile_cmd']).render(dst_path=dst_path)
     syscall(jade_cmd)
 
