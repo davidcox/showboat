@@ -20,11 +20,12 @@ args = parser.parse_args()
 app = bottle.Bottle()
 
 current_slide = 0
+visibility = 1
+
 
 # TODO: routes for launching editing applications on the "server"-side
 # wouldn't it be neat if there were an "edit" option that could locally launch
 # whatever external editor I like?
-
 @app.route('/edit/<file_path:path>.svg')
 def edit(file_path):
     local_path = os.path.join(args.root_path, file_path + '.svg')
@@ -52,12 +53,28 @@ def update_slide_status(index):
 
 @app.route('/current_slide')
 def get_current_slide():
-    global current_slide
+    global current_slide, visibility
+    if not visibility:
+        return -1
     return current_slide
+
+
+@app.post('/visibility/<state>')
+def set_visiblity(state):
+    global visibility
+    visibility = int(state)
+
+
+# @app.route('/visibility')
+# def get_visibility():
+#     global visibility
+#     return visibility
+
 
 @app.route('/push')
 def slave_presentation():
     return bottle.static_file('push.html', args.root_path)
+
 
 @app.route('/<path:path>')
 def static_route(path):

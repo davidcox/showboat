@@ -192,6 +192,9 @@ class Slide
         return this
 
     modifyTargetIdForUniqueness: (target) ->
+        # short circuit for now
+        return target
+
         slide_id = @slide_div.attr('id')
         this_slide = @slide_div
 
@@ -478,6 +481,9 @@ class Presentation
 
     showCurrent: (cb)->
         @slides[i].hide() for i in [0 .. @slides.length-1] when i isnt @current_slide_idx
+        if @current_slide_idx == -1
+            return
+
         @slides[@current_slide_idx].show(cb)
         location.hash = @current_slide_idx + 1
 

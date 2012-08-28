@@ -41,7 +41,7 @@ lparen = Suppress('(')
 rparen = Suppress(')')
 identifier = Word(alphanums + '_')
 comma = Suppress(',')
-line_start = Suppress(Regex(r'\n'))
+line_start = Suppress('\n')
 indent = Regex(r'[ \t]*').leaveWhitespace()
 indented_line = line_start + indent + Suppress(Regex(r'\S'))
 indented_line.setWhitespaceChars('')
@@ -86,22 +86,25 @@ def recursive_evaluate_magics(s, fn_registry):
     # find the first magic invokation
     try:
         m, mstart, mend = magic_cmd.scanString(s).next()
+        print('Found magic: {%s}' % s[mstart:mend])
     except StopIteration:
         return unpad_str(s)
 
+    # grab the parsed magic command from pyparsing
     magic_obj = m[0]
 
     # scan for indents, we'll bail at the first one less than
     # the indent level of the current magic
     target_indent = len(magic_obj.indent)
+    print('indent = {%s}' % magic_obj.indent)
     content_under_end = len(s)
-    for i, istart, iend in indented_line.scanString(s[mend:]):
+    for i, istart, iend in indented_line.scanString(s[mend+1:]):
         this_indent = len(i[0])
         if this_indent <= target_indent:
             content_under_end = mend + istart
             break
 
-    content_under = s[mend + 1:content_under_end]
+    content_under = s[mend:content_under_end]
 
     magic_obj.content_under = recursive_evaluate_magics(content_under, fn_registry)
     # execute the magic
@@ -177,7 +180,7 @@ def register_magic_identity_function(name, prefix=''):
             arg_list += ')'
 
         indent = indent_level
-        processed = (indent + prefix + magic_name +
+        processed = (prefix + magic_name +
                             arg_list + ' ' + content_after + '\n' +
                             content_under)
 
@@ -210,10 +213,12 @@ def blah7(**kwargs):
 def blah4(**kwargs):
     return "BLAH4" + ' {\n' + kwargs['content_under'] + '}'
 
-register_magic_identity_function('iden_test')
+register_magic_identity_function('iden_test', prefix='.')
+
 
 def parse_magics(s):
     return recursive_evaluate_magics(s, registry)
+
 
 def test_magics(s):
     print 'TEST STRING: '
@@ -244,8 +249,36 @@ blah5
 @blah4
     @iden_test balh
         stuff
+        @iden_test stuff2
+            stuff3
     should_be_unindented
     should be unindented 2
 """
+
+    test_str = """
+@blah4
+  @iden_test balh
+    stuff
+    @iden_test stuff2
+      stuff3
+should_be_unindented
+should be unindented 2
+"""
+
+    register_magic_identity_function('slide', prefix='.')
+    register_magic_identity_function('build', prefix='.')
+
+    test_str = '''
+@slide(title='Title slide')
+
+  .svg_include.fullscreen(src='svg/title.svg')
+
+  // #showboat and #tagline are defined in the svg
+  @build fade_in(#title)
+    .blah
+  @build fade_in(#tagline)
+    .blah
+
+'''
 
     test_magics(test_str)

@@ -11,7 +11,10 @@ import time
 from contextlib import contextmanager
 from ConfigParser import SafeConfigParser
 
-from magics import register_magic_identity_function, parse_magics
+use_magics = False
+
+if use_magics:
+    from magics import register_magic_identity_function, parse_magics
 
 showboat_keywords = ('slide', 'build', 'notes', 'set', 'svg_include')
 top_level_module_name = __name__.split('.')[0]
@@ -60,16 +63,18 @@ def rsync(src, dst):
 
 def preprocess_jade(jade_str):
     for kw in showboat_keywords:
-        # register a magic function for each kw
-        register_magic_identity_function(kw, prefix='.')
+        if use_magics:
+            # register a magic function for each kw
+            register_magic_identity_function(kw, prefix='.')
+            jade_str = parse_magics(jade_str)
 
-        # this was a gnarly regex to add dots to kw tags
-        # jade_str = re.sub(r'^(\s*)(%s)(\s|\(|\.|\#|$)' % kw,
-        #            r'\1.\2\3',
-        #            jade_str,
-        #            flags=re.M)
+        else:
+            # this was a gnarly regex to add dots to kw tags
+            jade_str = re.sub(r'^(\s*)\@(%s)(\s|\(|\.|\#|$)' % kw,
+                       r'\1.\2\3',
+                       jade_str,
+                       flags=re.M)
 
-    jade_str = parse_magics(jade_str)
     return jade_str
 
 
