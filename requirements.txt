@@ -1,3 +1,4 @@
 bottle>=0.10.6
 simplejson
 cherrypy
+mako

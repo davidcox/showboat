@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import re
+import sys
 from pkg_resources import resource_filename
 import shlex
 import subprocess
@@ -57,12 +58,20 @@ def rsync(src, dst):
 
 
 def preprocess_jade(jade_str):
-    for kw in showboat_keywords:
-        jade_str = re.sub(r'^(\s*)(%s)(\s|\(|\.|\#|$)' % kw,
-                   r'\1.\2\3',
-                   jade_str,
-                   flags=re.M)
-
+    # this function adds a '.' before the showboat keywords.
+    # e.g. slide() -> .slide()
+    # This makes jade produce e.g. slide-class div elements
+    pattern = r'^(\s*)(%s)(\s|\(|\.|\#|$)'
+    repl = r'\1.\2\3'
+    if re.sub.__code__.co_argcount < 5:
+        # flags param only introduced in Python 2.7, so no multiline sub()
+        lines = jade_str.split('\n')
+        for kw in showboat_keywords:
+            lines = map(lambda l: re.sub(pattern % kw, repl, l), lines)
+        jade_str = '\n'.join(lines)
+    else:
+        for kw in showboat_keywords:
+            jade_str = re.sub(pattern % kw, repl, jade_str, flags=re.M)
     return jade_str
 
 
@@ -189,7 +198,10 @@ def view_url(url, use_alt=False):
         url = 'file://' + url
     cmd = Template(config[app_key]).render(url=url)
     print cmd
-    syscall(cmd)
+    try:
+        syscall(cmd)
+    except Exception, e:
+        print >> sys.stderr, "Failed to launch browser", e
 
 
 def present_url(url):
